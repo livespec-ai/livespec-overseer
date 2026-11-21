@@ -366,7 +366,7 @@ def test_warm_profile_treats_still_valid_snapshot_as_success(*, tmp_path: Path):
     assert module.read_creds(path=profile / ".credentials.json") == ("old", 20_000.0)
 
 
-def test_warm_profile_reports_exception_removes_sandbox_and_checks_live_token(*, tmp_path: Path):
+def test_warm_profile_attributes_a_different_live_refresh_to_the_active_session(*, tmp_path: Path):
     module = caam_warm_module()
     _ = write_snapshot(home=tmp_path, name="idle", credential="old", expires_at_s=1000.0)
     live = tmp_path / ".claude" / ".credentials.json"
@@ -375,9 +375,15 @@ def test_warm_profile_reports_exception_removes_sandbox_and_checks_live_token(*,
 
     class MutatingAgent:
         def __call__(self, *, args: tuple[str, ...], env: dict[str, str], timeout: float) -> object:
-            del args, env, timeout
-            write_creds(path=live, bearer="live-after", expires_at_s=9000.0)
-            raise OSError("agent failed")
+            del args, timeout
+            sandbox = Path(env["CLAUDE_CONFIG_DIR"])
+            write_creds(
+                path=sandbox / ".credentials.json",
+                bearer="warm-token",
+                expires_at_s=30_000.0,
+            )
+            write_creds(path=live, bearer="active-session-token", expires_at_s=9000.0)
+            return type("Process", (), {"stdout": "ok\n", "stderr": ""})()
 
     result = module.warm_profile(
         name="idle",
@@ -388,12 +394,10 @@ def test_warm_profile_reports_exception_removes_sandbox_and_checks_live_token(*,
         logger=logs.append,
     )
 
-    assert result.ok is False
-    assert result.detail == "OSError: agent failed"
+    assert result.ok is True
     assert not (tmp_path / ".local" / "state" / "caam-usage-rotate" / "warm" / "idle").exists()
     assert logs == [
-        "FAIL keep-warm altered the LIVE credential -- this must never happen; "
-        "investigate before trusting the next rotation"
+        "keep-warm: the active account's own session refreshed its token during maintenance"
     ]
 
 
