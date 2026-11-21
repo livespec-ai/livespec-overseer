@@ -23,9 +23,11 @@ a reason that has nothing to do with the code under test.
 
 from __future__ import annotations
 
+import importlib
 from dataclasses import dataclass
 from pathlib import Path
 
+import pytest
 from caam_decision import UsageRecord
 
 from tests.test_caam_anthropic_loop import (
@@ -101,17 +103,18 @@ def _run(
     active_expires_in_s: float,
     target_expires_in_s: float,
     switch_account: object | None = None,
+    agent_runner: object | None = None,
     argv: list[str] | None = None,
 ) -> tuple[list[str], list[str]]:
     """One default (keep-warm on) pass; returns (emitted lines, profiles warmed)."""
     for name, expires_in in ((_ACTIVE, active_expires_in_s), (_TARGET, target_expires_in_s)):
-        write_snapshot(home=home, name=name, credential=name, expires_at_s=_NOW + expires_in)
+        _ = write_snapshot(home=home, name=name, credential=name, expires_at_s=_NOW + expires_in)
     write_creds(
         path=home / ".claude" / ".credentials.json",
         bearer=_ACTIVE,
         expires_at_s=_NOW + active_expires_in_s,
     )
-    agent = _WarmRecorder()
+    agent = _WarmRecorder() if agent_runner is None else agent_runner
     lines: list[str] = []
     module = caam_loop_module()
     overrides: dict[str, object] = {}
@@ -137,7 +140,8 @@ def _run(
         enforce_models=lambda **kwargs: [],
         **overrides,
     )
-    return lines, agent.warmed
+    warmed = agent.warmed if isinstance(agent, _WarmRecorder) else []
+    return lines, warmed
 
 
 def test_the_expired_account_just_left_is_warmed_in_the_pass_that_left_it(
@@ -158,6 +162,60 @@ def test_the_expired_account_just_left_is_warmed_in_the_pass_that_left_it(
 
     assert _ACTIVE in warmed, "the vacated, expired account was never a warming candidate"
     assert _TARGET not in warmed, "the still-valid target must not be refreshed pre-expiry"
+
+
+def test_a_live_refresh_during_warm_is_resnapshotted_before_the_pass_ends(
+    *, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The warm stage re-snapshots the active account after concurrent maintenance.
+
+    The agent can refresh the active session while it is warming an expired idle
+    snapshot.  The pass began with an active snapshot matching the prior live
+    token; only the post-warm resnapshot can make the vault agree by pass end.
+    """
+
+    warm = importlib.import_module("caam_warm")
+    warm_stage = importlib.import_module("caam_pass_warm")
+    live = tmp_path / ".claude" / ".credentials.json"
+    resnapshots: list[str | None] = []
+
+    class ActiveRefreshingAgent:
+        def __call__(self, *, args: tuple[str, ...], env: dict[str, str], timeout: float) -> object:
+            del args, timeout
+            write_creds(
+                path=Path(env["CLAUDE_CONFIG_DIR"]) / ".credentials.json",
+                bearer="idle-warm-token",
+                expires_at_s=_NOW + _VALID_IN,
+            )
+            write_creds(
+                path=live,
+                bearer="active-session-token",
+                expires_at_s=_NOW + _VALID_IN,
+            )
+            return type("Process", (), {"stdout": "ok\n", "stderr": ""})()
+
+    def resnapshot_active(*, active_name: str, home: Path, **_: object) -> None:
+        token = warm.token_of(path=live)
+        resnapshots.append(token)
+        assert token is not None
+        write_creds(
+            path=home / ".local/share/caam/vault/claude" / active_name / ".credentials.json",
+            bearer=token,
+            expires_at_s=_NOW + _VALID_IN,
+        )
+
+    monkeypatch.setattr(warm_stage, "resnapshot_active", resnapshot_active)
+
+    _ = _run(
+        home=tmp_path,
+        active_expires_in_s=_VALID_IN,
+        target_expires_in_s=_EXPIRED_IN,
+        agent_runner=ActiveRefreshingAgent(),
+    )
+
+    active_snapshot = tmp_path / ".local/share/caam/vault/claude" / _ACTIVE / ".credentials.json"
+    assert resnapshots == ["active-session-token"]
+    assert warm.token_of(path=active_snapshot) == warm.token_of(path=live)
 
 
 def test_a_pass_that_holds_warms_an_expired_idle_account_exactly_once(*, tmp_path: Path) -> None:

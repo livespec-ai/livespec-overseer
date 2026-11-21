@@ -401,6 +401,46 @@ def test_warm_profile_attributes_a_different_live_refresh_to_the_active_session(
     ]
 
 
+def test_warm_profile_reports_a_matching_sandbox_token_before_removing_it(*, tmp_path: Path):
+    module = caam_warm_module()
+    _ = write_snapshot(home=tmp_path, name="idle", credential="old", expires_at_s=1000.0)
+    live = tmp_path / ".claude" / ".credentials.json"
+    write_creds(path=live, bearer="live-before", expires_at_s=9000.0)
+    sandbox = tmp_path / ".local" / "state" / "caam-usage-rotate" / "warm" / "idle"
+    logs: list[str] = []
+
+    class CorruptingAgent:
+        def __call__(self, *, args: tuple[str, ...], env: dict[str, str], timeout: float) -> object:
+            del args, timeout
+            write_creds(
+                path=Path(env["CLAUDE_CONFIG_DIR"]) / ".credentials.json",
+                bearer="warm-token",
+                expires_at_s=30_000.0,
+            )
+            write_creds(path=live, bearer="warm-token", expires_at_s=30_000.0)
+            return type("Process", (), {"stdout": "ok\n", "stderr": ""})()
+
+    def record(message: str) -> None:
+        assert sandbox.is_dir(), "the sandbox token must be compared before cleanup"
+        logs.append(message)
+
+    result = module.warm_profile(
+        name="idle",
+        home=tmp_path,
+        now=2000.0,
+        agent_runner=CorruptingAgent(),
+        caam_runner=IdentityCaam(home=tmp_path),
+        logger=record,
+    )
+
+    assert result.ok is True
+    assert not sandbox.exists()
+    assert logs == [
+        "FAIL keep-warm altered the LIVE credential -- this must never happen; "
+        "investigate before trusting the next rotation"
+    ]
+
+
 def test_the_pre_expiry_warm_margin_is_retired(*, tmp_path: Path):
     """The pre-expiry warm-margin gate is gone: `warm_margin_s` no longer exists.
 

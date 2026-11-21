@@ -35,6 +35,7 @@ from caam_warm import (
     WarmOutcome,
     emit_next_warm_wake,
     keep_warm,
+    resnapshot_active,
 )
 
 __all__: list[str] = [
@@ -98,6 +99,13 @@ def run_warm_stage(*, stage: WarmStage, active_name: str) -> None:
     """
 
     warmed = warm_idle(stage=stage, active_name=active_name)
+    resnapshot_active(
+        active_name=active_name,
+        home=stage.home,
+        dry_run=stage.dry_run,
+        caam_runner=stage.caam_runner,
+        logger=line_logger(writer=stage.stdout),
+    )
     emit_warm_schedule(
         span=stage.span,
         account=active_name,

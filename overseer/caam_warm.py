@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Final, Protocol, cast
 
 from _caam_redact import redacted_prefix
+from _caam_warm_live_change import finish_warm
 from _caam_warm_rebind import rebind_identity, refuse_unsafe_backup
 from caam_profile_state import STATE_REL, caam_vault, live_creds_path
 from caam_usage import read_creds
@@ -44,10 +45,6 @@ _WARM_RETRY_DEFAULT_S = "3600"
 _WARM_WAKE_DELAY_DEFAULT_S = "15"
 _AGENT_TIMEOUT_S = 180.0
 _TOOL: Final = "claude"
-_LIVE_CHANGED = (
-    "FAIL keep-warm altered the LIVE credential -- this must never happen; "
-    "investigate before trusting the next rotation"
-)
 
 
 class AgentProcess(Protocol):
@@ -305,9 +302,7 @@ def warm_profile(
     except (OSError, ValueError) as exc:
         return WarmResult(ok=False, detail=f"{type(exc).__name__}: {exc}")
     finally:
-        shutil.rmtree(sandbox, ignore_errors=True)
-        if token_of(path=live_path) != live_before:
-            logger(_LIVE_CHANGED)
+        finish_warm(live_before=live_before, live_path=live_path, sandbox=sandbox, logger=logger)
 
 
 def _warm_memo(*, state: dict[str, object]) -> dict[str, object]:
