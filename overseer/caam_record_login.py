@@ -129,9 +129,9 @@ def _record(
             records = loaded.records
             held = account in cast(dict[str, object], records["holds"])
             replaced = current_login(records=records, name=account) is not None
-            _store_credential(body=body, target=caam_vault(home=home) / account / _CREDENTIAL)
             record_login(records=records, name=account, minted_at=minted, source=basis, now=now)
             save_records(path=path, records=records)
+            _store_credential(body=body, target=caam_vault(home=home) / account / _CREDENTIAL)
     except OSError as exc:
         say(f"FAIL could not record the login: {type(exc).__name__}: {exc}")
         return 2

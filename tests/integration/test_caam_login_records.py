@@ -266,6 +266,28 @@ def test_record_login_reports_a_corrupt_store_and_leaves_it_alone(*, tmp_path: P
     assert path.read_text(encoding="utf-8") == "not json"
 
 
+def test_record_login_leaves_the_vault_unchanged_when_saving_the_record_fails(
+    *, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = _home(tmp_path=tmp_path)
+    stored = home / ".local/share/caam/vault/claude" / OTHER / ".credentials.json"
+    before = stored.read_bytes()
+    config = _login_dir(tmp_path=tmp_path, tag="save-failure")
+    out: list[str] = []
+
+    def fail_save(*, path: Path, records: object) -> None:
+        raise OSError("injected save failure")
+
+    monkeypatch.setattr("caam_record_login.save_records", fail_save)
+
+    assert (
+        main(argv=[OTHER, "--config-dir", str(config)], home=home, now=NOW, stdout=out.append) == 2
+    )
+    assert stored.read_bytes() == before
+    assert not records_path(home=home).exists()
+    assert out[-1].startswith("FAIL could not record the login")
+
+
 # --- Recording a new login replaces the old one and releases a login hold -----
 
 

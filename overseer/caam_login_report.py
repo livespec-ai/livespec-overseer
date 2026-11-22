@@ -109,11 +109,14 @@ def login_report_lines(
             else (f"age {_span(seconds=age)}")
         )
         label = "first seen" if first_seen else "minted"
+        mint_time = f"{label} {stamp(at=minted)}"
+        if first_seen:
+            mint_time += " (lower bound)"
         lines.append(f"LOGIN {name}: {shown}, {label} {stamp(at=minted)} ({login['basis']})")
         if settings.cap_s is not None and age >= settings.cap_s - settings.lead_s:
             lines.append(
                 f"WARN login lifetime cap: {name} login is approaching its lifetime cap "
-                f"({shown}, cap {_span(seconds=settings.cap_s)})"
+                f"({shown}, {mint_time}, cap {_span(seconds=settings.cap_s)})"
             )
     return tuple(lines)
 
