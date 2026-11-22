@@ -11,6 +11,7 @@ from typing import cast
 from _caam_pass_span import Clock, PassEventEmitter, PassSpan, open_pass_span
 from _caam_rotation_span import rotation_sink
 from _caam_span_seam import emitter_from_env
+from caam_active_credential_hold import active_usage_read_outcome
 from caam_anthropic_decide import DecisionSeams, decide
 from caam_anthropic_finish import ACTIVE_FAIL, EMPTY_VAULT, LineWriter, finish
 from caam_anthropic_flags import Flags, scheduled_pass
@@ -34,10 +35,7 @@ from caam_profile_state import (
 from caam_profile_state import (
     state_path as caam_state_path,
 )
-from caam_profiles import (
-    ActiveIdentity,
-    active_profile,
-)
+from caam_profiles import ActiveIdentity, active_profile
 from caam_protected_accounts import apply_protected_accounts, requested_protected_accounts
 from caam_rendering import trigger_header
 from caam_warm import resnapshot_active
@@ -210,15 +208,18 @@ def _pass_with_active(
         # published at all because spec.md requires a pass that fully resolved
         # the identity but could not read its quota to publish anyway: the
         # identity is known and the missing figures bear only on the report.
+        code, active_usage_line = active_usage_read_outcome(
+            active_name=active_name, profiles=profiles
+        )
         code = finish(
-            code=2,
+            code=code,
             state=context.state,
             state_path=context.state_path,
             save=seams.save_state,
             stdout=context.stdout,
             lines=(
                 *pass_table_lines(profiles=profiles, active_name=active_name, now=context.now),
-                f"FAIL cannot read usage for active profile {active_name}",
+                active_usage_line,
             ),
         )
         return complete_publications(
