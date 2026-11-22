@@ -209,9 +209,14 @@ def _poll_profile(*, name: str, context: _PollContext) -> ProfileUsage:
             usage=_usage_from_cache(cached=cached),
             source=f"cached {age / 3600:.1f}h",
             credential_expired=credential_expired,
+            read_failure=why,
         )
     return ProfileUsage(
-        name=name, usage=None, source=f"dark: {why}", credential_expired=credential_expired
+        name=name,
+        usage=None,
+        source=f"dark: {why}",
+        credential_expired=credential_expired,
+        read_failure=why,
     )
 
 

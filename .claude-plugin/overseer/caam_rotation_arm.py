@@ -11,7 +11,7 @@ against the durable store and must therefore happen exactly once per pass.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from caam_anthropic_finish import SaveState
 from caam_burn_rate import burn_rate, replace_baseline
@@ -24,6 +24,7 @@ from caam_decision import (
     five_hour_remaining_floor,
 )
 from caam_fast_drain import ShortWindowProjection
+from caam_login_hold import LoginHold
 from caam_refusal_hold import (
     RefusalState,
     TriggerBinding,
@@ -32,7 +33,7 @@ from caam_refusal_hold import (
     trigger_binding,
 )
 from caam_refusal_store import RememberedRefusal
-from caam_refusals import WINDOW_FIVE_HOUR
+from caam_refusals import WINDOW_FIVE_HOUR, WINDOW_SEVEN_DAY
 from caam_scoped_model import scoped_model_pinned
 
 __all__: list[str] = [
@@ -61,6 +62,8 @@ class RotationRequest:
     protection_floors: Mapping[str, float]
     scheduled: bool
     save_state: SaveState
+    # The active account's login hold, where its login is judged dark.
+    dark_login: LoginHold | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,6 +85,8 @@ class RotationChoice:
     exit_code: int = 0
     short_window_triggered: bool = False
     refusal: RememberedRefusal | None = None
+    # The login hold that governed this move, where a dark login did.
+    dark_login: LoginHold | None = None
     # The projection that fired the fast-drain trigger, where that trigger is
     # what GOVERNED this move. Carried for the same reason the refusal is: the
     # switch line owes the operator the rate and the projected remaining, and
@@ -116,11 +121,19 @@ class RotationArm:
 
 def resolve_arm(*, request: RotationRequest) -> RotationArm:
     """Resolve the shared terms, pruning the refusals that have lapsed as it goes."""
-    refusal = refusal_state(
+    standing = refusal_state(
         state=request.context.state,
         profiles=request.profiles,
         active_name=request.active_name,
         now=request.context.now,
+    )
+    # A dark login governs where several triggers fire, and the capacity test's
+    # release for a refusal-held active account is NOT extended to it: the refusal
+    # stays remembered and still holds its accounts, but no longer governs.
+    refusal = (
+        standing
+        if request.dark_login is None
+        else RefusalState(holding=standing.holding, active=None)
     )
     # MEASURED BEFORE THE BASELINE IS REPLACED. A pass that remembered its own
     # reading first would measure every fall against that reading, which is a
@@ -157,14 +170,28 @@ def resolve_arm(*, request: RotationRequest) -> RotationArm:
     return RotationArm(
         scoped_pin=scoped_model_pinned(state=request.context.state),
         refusal=refusal,
-        bound=trigger_binding(
-            refusal=refusal,
-            current=request.current,
-            active_name=request.active_name,
-            protection_floors=request.protection_floors,
+        bound=(
+            trigger_binding(
+                refusal=refusal,
+                current=request.current,
+                active_name=request.active_name,
+                protection_floors=request.protection_floors,
+            )
+            if request.dark_login is None
+            else dark_login_binding(current=request.current)
         ),
         burn=burn,
         load=load,
+    )
+
+
+def dark_login_binding(*, current: UsageRecord) -> TriggerBinding:
+    """What a dark login leaves ON: the weekly dimension, with no headroom anywhere."""
+    return TriggerBinding(
+        dimension=WINDOW_SEVEN_DAY,
+        remaining=0.0,
+        label="dark login",
+        usage=replace(current, five_hour_remaining=0.0, seven_day_remaining=0.0),
     )
 
 

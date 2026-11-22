@@ -17,13 +17,15 @@ from caam_anthropic_flags import Flags, scheduled_pass
 from caam_anthropic_revive import revive_pass_profiles
 from caam_anthropic_status import write_status
 from caam_hold_record import record_pass_hold
+from caam_pass_dark_login import live_credential_fingerprint, observe_pass_dark_logins
 from caam_pass_factory_probe import observe_pass_factory_probes
 from caam_pass_observe import observe_pass_rows
 from caam_pass_probe import probe_snapshotless_profiles
 from caam_pass_publish import complete_publications, pass_publication, pass_stamp
 from caam_pass_refusals import observe_pass_refusals
 from caam_pass_seams import AgentRunner, PassSeams, line_logger, pass_seams
-from caam_pass_table import emit_pass_table, pass_table_lines
+from caam_pass_table import emit_pass_table
+from caam_pass_unreadable import finish_unreadable_active
 from caam_pass_warm import WarmStage, run_warm_stage, warm_idle
 from caam_profile_state import (
     caam_vault,
@@ -169,6 +171,10 @@ def _pass_with_active(
         caam_runner=seams.caam_runner,
         logger=line_logger(writer=context.stdout),
     )
+    # The live credential as it stands BEFORE the active account is read with it:
+    # the dark-login judgement needs the bytes that were refused, and compares them
+    # with a re-read taken after. A hash only; the credential itself is never kept.
+    live_before = live_credential_fingerprint(home=context.home)
     profiles = poll_profiles(
         active_name=active_name,
         state=context.state,
@@ -195,6 +201,16 @@ def _pass_with_active(
         profiles=profiles,
         seams=seams,
     )
+    # A dark login is judged here, ahead of the early exit below: an active account
+    # whose reading was refused has no usage, and that is exactly the pass that
+    # must still rotate away from it.
+    profiles, dark_login = observe_pass_dark_logins(
+        context=context,
+        active=active,
+        profiles=profiles,
+        live_before=live_before,
+        source=seams.tracked_sessions,
+    )
     protected_accounts = apply_protected_accounts(
         state=context.state,
         requested_accounts=requested_protected_accounts(flagged=context.flags.protected_accounts),
@@ -206,27 +222,12 @@ def _pass_with_active(
         observe_pass_factory_probes(context=context, fetcher=seams.fetcher, post=seams.push_post)
     current = next((profile.usage for profile in profiles if profile.name == active_name), None)
     if current is None:
-        # Published AFTER the report is written and the state persisted, and
-        # published at all because spec.md requires a pass that fully resolved
-        # the identity but could not read its quota to publish anyway: the
-        # identity is known and the missing figures bear only on the report.
-        code = finish(
-            code=2,
-            state=context.state,
-            state_path=context.state_path,
-            save=seams.save_state,
-            stdout=context.stdout,
-            lines=(
-                *pass_table_lines(profiles=profiles, active_name=active_name, now=context.now),
-                f"FAIL cannot read usage for active profile {active_name}",
-            ),
-        )
-        return complete_publications(
-            publication=publication,
-            code=code,
+        return finish_unreadable_active(
+            context=context,
             profiles=profiles,
-            interactive_name=active_name,
-            state=context.state,
+            active_name=active_name,
+            seams=seams,
+            publication=publication,
             protection_floors=protected_accounts.values,
         )
     # Observed BEFORE the decision and after the readings, because a refusal is
@@ -299,6 +300,7 @@ def _pass_with_active(
             scheduled=scheduled_pass(flags=context.flags),
             after_switch=_after_final_switch,
             lock_contended=publication.suppress,
+            dark_login=dark_login,
             emit_rotation=rotation_sink(span=context.span, at=context.now),
         ),
     )

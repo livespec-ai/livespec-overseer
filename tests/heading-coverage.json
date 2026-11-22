@@ -4368,41 +4368,41 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A dark active login is left on the next pass",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-iusknl.)"
+    "test": "tests.integration.test_caam_dark_login.test_scenario_a_dark_active_login_is_left_on_the_next_pass_and_ends_dark_with_a_hold",
+    "work_item": "overseer-iusknl",
+    "reason": "Drives a full rotation pass over a transcript recording the provider refusing the login as unrenewable, with healthy usage figures, and asserts the switch to the surviving account, a switch line naming the dark login, condition (a) and when, the current login ended dark and the login hold left in the durable store, with no request beyond the ordinary readings; a second test drives condition (b) over two consecutive passes."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: An expired access token alone does not trigger a dark-login rotation",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-iusknl.)"
+    "test": "tests.integration.test_caam_dark_login.test_scenario_an_expired_access_token_alone_does_not_trigger_a_dark_login_rotation",
+    "work_item": "overseer-iusknl",
+    "reason": "Runs three passes with an expired access token whose reading is never sent and asserts no switch, no login hold and no pending suspicion."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A dark active login with no surviving candidate holds and reports",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-iusknl.)"
+    "test": "tests.integration.test_caam_dark_login.test_scenario_a_dark_active_login_with_no_surviving_candidate_holds_and_reports",
+    "work_item": "overseer-iusknl",
+    "reason": "Runs a pass whose only other account is exhausted and asserts the hold line says the active login is dark and no account could be selected, names no reset, and the login hold is recorded."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: One refused reading does not judge a login dark",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-iusknl.)"
+    "test": "tests.integration.test_caam_dark_login.test_scenario_one_refused_reading_does_not_judge_a_login_dark",
+    "work_item": "overseer-iusknl",
+    "reason": "Refuses one reading, then a healthy one, then a refused one, and asserts no judgement; a companion test changes the credential between refused passes; another asserts two consecutive refusals with the credential unchanged judge it dark under (b)."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A login hold survives a restart",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-iusknl.)"
+    "test": "tests.integration.test_caam_dark_login.test_scenario_a_login_hold_survives_a_restart_and_is_never_selected",
+    "work_item": "overseer-iusknl",
+    "reason": "Judges a login dark, builds a new harness over the same files with no transcript, and asserts the next pass still leaves the held account and that a later pass does not return to it although it reads healthiest."
   },
   {
     "spec_root": "SPECIFICATION",

@@ -9,6 +9,7 @@ from typing import Protocol
 from _caam_rotation_span import RotationSink
 from caam_anthropic_finish import LineWriter, SaveState
 from caam_decision import UsageRecord
+from caam_login_hold import LoginHold
 from caam_switch import SwitchRequest, SwitchResult
 
 __all__: list[str] = [
@@ -103,3 +104,6 @@ class DecisionSeams:
     # not a span-carrying rotation pass -- a direct `decide` caller has no trace to
     # hang one from, and reports nothing rather than emitting an orphan record.
     emit_rotation: RotationSink | None = None
+    # The active account's login hold, where its login is judged dark. It makes the
+    # pass leave on its own, whatever the usage figures report.
+    dark_login: LoginHold | None = None

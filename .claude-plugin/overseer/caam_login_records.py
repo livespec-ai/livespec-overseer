@@ -31,16 +31,19 @@ __all__: list[str] = [
     "END_REPLACED",
     "RECORDS_REL",
     "RETENTION_DAYS",
+    "Records",
     "RecordsLoad",
     "current_login",
     "end_login",
     "load_records",
     "locked",
+    "note_condition",
     "note_first_seen",
     "prune_records",
     "record_login",
     "records_path",
     "save_records",
+    "suspects",
 ]
 
 RECORDS_REL: Final = Path(".local/state/caam-usage-rotate/login-records.json")
@@ -155,10 +158,22 @@ def record_login(*, records: Records, name: str, minted_at: float, source: str, 
         "source": source,
     }
     _ = _holds(records=records).pop(name, None)
+    _ = suspects(records=records).pop(name, None)
+
+
+def suspects(*, records: Records) -> dict[str, object]:
+    """First refused readings awaiting their confirming pass (an optional section)."""
+    return cast(dict[str, object], records.setdefault("suspects", {}))
 
 
 def end_login(
-    *, records: Records, name: str, now: float, cause: str, evidence: str, hold: bool = True
+    *,
+    records: Records,
+    name: str,
+    now: float,
+    cause: str,
+    evidence: str,
+    hold: bool = True,
 ) -> bool:
     """End the current login. Returns False where there was none to end."""
     login = current_login(records=records, name=name)
@@ -173,6 +188,14 @@ def end_login(
     if hold and cause == END_DARK:
         _holds(records=records)[name] = {"since": now, "evidence": evidence}
     return True
+
+
+def note_condition(*, records: Records, name: str, condition: str) -> None:
+    """Say which condition judged a login dark, on the hold and on the ended login."""
+    cast(dict[str, object], _holds(records=records)[name])["condition"] = condition
+    cast(list[dict[str, object]], _entry(records=records, name=name)["past"])[-1]["condition"] = (
+        condition
+    )
 
 
 def prune_records(*, records: Records, now: float) -> None:

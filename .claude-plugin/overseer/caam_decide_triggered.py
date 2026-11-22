@@ -19,13 +19,20 @@ What does differ is how a HOLD reads. A refusing account with no replacement is
 a different situation from an ordinary empty candidate set -- the fleet is
 sitting on an account that serves nothing -- so it gets its own line.
 """
+# livespec-lloc-soft-band-owner: overseer-4z97.2
 
 from __future__ import annotations
 
 from _caam_rotation_span import switch_trigger
 from caam_candidate_diagnosis import CandidatePopulation
 from caam_capacity_select import capacity_release_note, capacity_selection
+from caam_dark_login_lines import (
+    DARK_LOGIN_TRIGGER,
+    dark_login_trigger_line,
+)
 from caam_decide_report import (
+    dark_login_cause,
+    hold_dark_login,
     hold_no_candidate,
     hold_no_capacity,
     hold_reasons,
@@ -67,6 +74,7 @@ def triggered_choice(
     scoped_alone = (
         not request.context.flags.force
         and not arm.refusal.holds_active
+        and request.dark_login is None
         and scoped_alone_trigger(
             usage=request.current,
             active_name=request.active_name,
@@ -89,7 +97,7 @@ def triggered_choice(
                 protection_floors=request.protection_floors,
                 load=arm.load,
                 active_fast_draining=active_fast_draining or projection is not None,
-                active_refusal_held=arm.refusal.holds_active,
+                active_refusal_held=arm.refusal.holds_active or request.dark_login is not None,
             )
         )
         if request.scheduled
@@ -133,6 +141,28 @@ def triggered_choice(
     # Ahead of the empty-set hold, which this case would otherwise fall into
     # wearing the wrong diagnosis: the set was NOT empty, and every account in
     # it cleared every gate that hold's cause reports on.
+    if request.dark_login is not None and (selection.excluded_every or not ranked):
+        return RotationChoice(
+            target=None,
+            exit_code=hold_dark_login(
+                context=request.context,
+                save_state=request.save_state,
+                decision_line=decision_line,
+                hold=request.dark_login,
+                cause=dark_login_cause(
+                    context=request.context,
+                    population=CandidatePopulation(
+                        profiles=request.profiles,
+                        active_name=request.active_name,
+                        dimension=arm.bound.dimension,
+                        protection_floors=request.protection_floors,
+                        refusal_held=arm.refusal.held,
+                    ),
+                    capacity_excluded=selection.excluded_every,
+                ),
+                reasons=reasons,
+            ),
+        )
     if selection.excluded_every:
         return RotationChoice(
             target=None,
@@ -172,6 +202,7 @@ def triggered_choice(
         ),
         refusal=arm.refusal.active,
         projection=projection,
+        dark_login=request.dark_login,
     )
 
 
@@ -181,6 +212,8 @@ def _decision_line(
     arm: RotationArm,
     projection: ShortWindowProjection | None,
 ) -> str:
+    if request.dark_login is not None:
+        return dark_login_trigger_line(hold=request.dark_login)
     if arm.refusal.active is not None:
         return refusal_trigger_line(remembered=arm.refusal.active)
     if projection is not None:
@@ -202,6 +235,8 @@ def _switch_trigger_name(
     arm: RotationArm,
     projection: ShortWindowProjection | None,
 ) -> str:
+    if request.dark_login is not None:
+        return DARK_LOGIN_TRIGGER
     if arm.refusal.holds_active:
         return REFUSAL_TRIGGER
     if projection is not None:

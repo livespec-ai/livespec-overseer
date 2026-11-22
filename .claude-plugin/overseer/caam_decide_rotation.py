@@ -60,7 +60,12 @@ def rotation_choice(*, request: RotationRequest) -> RotationChoice:
         protection_floors=request.protection_floors,
         scoped_pin=arm.scoped_pin,
     )
-    if request.context.flags.force or threshold_triggered or arm.refusal.holds_active:
+    if (
+        request.context.flags.force
+        or threshold_triggered
+        or arm.refusal.holds_active
+        or request.dark_login is not None
+    ):
         return triggered_choice(
             request=request,
             arm=arm,
