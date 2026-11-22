@@ -31,7 +31,7 @@ from caam_login_records import (
     records_path,
     save_records,
 )
-from caam_login_report import lifetime_settings, login_report_lines
+from caam_login_report import lifetime_settings, login_report_lines, stamp
 from caam_record_login import credential_write_time, main
 
 from tests.test_caam_anthropic_loop import no_plan_read
@@ -439,6 +439,8 @@ def test_a_login_approaching_the_measured_cap_is_warned_and_a_younger_one_is_not
     assert len(warned) == 1
     assert OTHER in warned[0]
     assert "approaching its lifetime cap" in warned[0]
+    assert f"minted {stamp(at=NOW - 26 * DAY - 3600)}" in warned[0]
+    assert "lower bound" not in warned[0]
     assert "LOGIN lifetime cap: 28d 0h, warning lead 2d 0h" in lines
 
 
@@ -448,7 +450,10 @@ def test_a_first_seen_age_is_a_lower_bound_and_still_warns(*, tmp_path: Path) ->
     settings = lifetime_settings(environ={CAP_ENV: "672", LEAD_ENV: "48"})
     lines = login_report_lines(records=records, names=(ACTIVE,), now=NOW, settings=settings)
     assert any("lower bound" in line and "(first-seen)" in line for line in lines)
-    assert any(line.startswith("WARN login") and ACTIVE in line for line in lines)
+    warned = [line for line in lines if line.startswith("WARN login")]
+    assert len(warned) == 1
+    assert ACTIVE in warned[0]
+    assert f"first seen {stamp(at=NOW - 27 * DAY)} (lower bound)" in warned[0]
     assert "age at least 27d 0h" in lines[1]
 
 
