@@ -406,6 +406,32 @@ def test_active_usage_unreadable_prints_table_then_source_fail(*, tmp_path: Path
     assert saved
 
 
+def test_expired_live_credential_holds_with_a_named_reason(*, tmp_path: Path) -> None:
+    """A dark live login must not turn a known active account into a failed pass."""
+    module = caam_loop_module()
+    out: list[str] = []
+    write_snapshot(home=tmp_path, name="active", credential="stored", expires_at_s=30_000.0)
+    write_creds(
+        path=tmp_path / ".claude" / ".credentials.json",
+        bearer="expired-live",
+        expires_at_s=1_000.0,
+    )
+
+    result = module.run_pass(
+        flags=module.parse_flags(argv=["--scheduled", "--no-warm"]),
+        home=tmp_path,
+        now=2_000.0,
+        stdout=out.append,
+        caam_runner=lambda *, args: FakeProcess(),
+        capacity_source=no_plan_read,
+        save_state=lambda *, state, state_path: None,
+        enforce_models=lambda **kwargs: [],
+    )
+
+    assert result == 0
+    assert any(line.startswith("hold:") and "expired" in line for line in out)
+
+
 def test_unverified_live_rows_are_not_considered_and_get_revive_note(*, tmp_path: Path):
     module = caam_loop_module()
     saved: list[dict[str, object]] = []
