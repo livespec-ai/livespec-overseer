@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.71.0](https://github.com/livespec-ai/livespec-overseer/compare/v5.70.1...v5.71.0) (2026-11-22)
+
+
+### Features
+
+* **caam:** a dark active login triggers rotation and leaves a durable login hold (overseer-iusknl) ([5091cc2](https://github.com/livespec-ai/livespec-overseer/commit/5091cc2d443ec6c5b4f695b06a71d89f1007aa42))
+
 ## [5.70.1](https://github.com/livespec-ai/livespec-overseer/compare/v5.70.0...v5.70.1) (2026-11-22)
 
 
