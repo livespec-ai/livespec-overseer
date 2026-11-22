@@ -190,11 +190,13 @@ def test_bg_shell_suppresses_restart(*, tmp_path):
     # 100 → 200 (node runtime) → 300 (node MCP server) + 400 (a bg-command shell).
     children = {100: [200], 200: [300, 400]}
     comms = {200: "node", 300: "node", 400: "zsh"}
+    starttimes = {200: "1000", 300: "1001", 400: "2600"}
     sup = make_supervisor(
         tmp_path=tmp_path,
         fake=fake,
         children_of=lambda *, pid: children.get(pid, []),
         comm_of=lambda *, pid: comms.get(pid),
+        starttime_of=lambda *, pid: starttimes.get(pid),
     )
     sup.live_codex = {
         (session, topic): codex_sessions.CodexSession(
