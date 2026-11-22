@@ -714,9 +714,26 @@ def test_recreated_tick_retries_only_enter_for_the_exact_pending_resume(*, tmp_p
     assert final["phase"] == "completed"
 
 
+@pytest.mark.parametrize(
+    "herdr_environment",
+    [
+        pytest.param({}, id="herdr-environment-absent"),
+        pytest.param(
+            {"HERDR_SOCKET_PATH": "/tmp/host-herdr.sock", "HERDR_PANE_ID": "w1:p9"},
+            id="herdr-environment-present",
+        ),
+    ],
+)
 def test_completed_replacement_fences_failed_cleanup_then_allows_a_fresh_round(
-    *, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    *,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    herdr_environment: dict[str, str],
 ) -> None:
+    for name in ("HERDR_SOCKET_PATH", "HERDR_PANE_ID"):
+        monkeypatch.delenv(name, raising=False)
+    for name, value in herdr_environment.items():
+        monkeypatch.setenv(name, value)
     world, track, counts = _launched_unknown_world(tmp_path=tmp_path)
     identity = _install_successor(world=world, successor_case="fresh-runtime-child")
     recreated = _live_server_supervisor(tmp_path=tmp_path, fake=world.fake, now=lambda: 1004.0)

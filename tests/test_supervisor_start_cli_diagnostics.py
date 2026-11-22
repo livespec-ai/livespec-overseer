@@ -58,8 +58,13 @@ def test_cli_start_resolves_claude_from_home_local_bin_when_path_is_sanitized(
     claude.parent.mkdir(parents=True)
     claude.write_text("#!/bin/sh\n", encoding="utf-8")
     claude.chmod(0o755)
+    host_bin = tmp_path / "host-bin"
+    host_claude = host_bin / "claude"
+    host_bin.mkdir()
+    host_claude.write_text("#!/bin/sh\n", encoding="utf-8")
+    host_claude.chmod(0o755)
     monkeypatch.setenv("HOME", str(home))
-    monkeypatch.setenv("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin")
+    monkeypatch.setenv("PATH", str(host_bin))
     fake = FakeTmux()
     monkeypatch.setattr(supervisor.tmuxio, "TmuxIO", lambda: fake)
 
