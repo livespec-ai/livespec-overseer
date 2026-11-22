@@ -7434,3 +7434,55 @@ Then it MUST use the published protection floor and MUST NOT apply another
 When the published protection floors are absent or unreadable
 Then it MUST refuse to select an account whose protection status it cannot establish
 ```
+
+## Scenario: A legitimate forwarded refusal holds the active account fleet-wide
+
+Given a listed host whose ssh host key verified
+And the active account on the role holder is account A
+And that host forwards a usage-limit refusal observed against account A while A was active
+
+When the rotation operation evaluates the forwarded refusal
+
+Then account A is refusal-held exactly as a refusal on the role holder would hold it
+And the refusal trigger applies to account A
+And the operation reports the hold as originating from that listed host
+
+## Scenario: A forwarded refusal for a non-active account is ignored
+
+Given the active account on the role holder is account A
+And a listed host forwards a usage-limit refusal observed against account B
+
+When the rotation operation evaluates the forwarded refusal
+
+Then no account is held by it
+And the refusal trigger does not fire
+And the operation reports that the forwarded refusal was ignored because it did not name the active account
+
+## Scenario: A stale forwarded refusal is ignored
+
+Given the active account on the role holder is account A
+And a settling claim's re-read on account A was recorded after a listed host's forwarded refusal was observed
+
+When the rotation operation evaluates the forwarded refusal
+
+Then account A is not held by it
+And the operation reports that the forwarded refusal was ignored as stale
+
+## Scenario: An unauthenticated forwarded refusal is ignored
+
+Given a refusal report that does not arrive on a push session whose ssh host key verified
+Or that names a host that is not a listed host
+
+When the rotation operation evaluates the report
+
+Then it is not a forwarded refusal and holds no account
+And the operation reports that it was ignored, naming the failed condition
+
+## Scenario: A misclassified authentication error is not a usage-limit refusal
+
+Given a listed host forwards a refusal that the operation's refusal test classifies as an authentication error rather than a usage-limit refusal
+
+When the rotation operation evaluates the forwarded refusal
+
+Then no account is held by it
+And the operation reports that the forwarded refusal was ignored because it was not a usage-limit refusal
