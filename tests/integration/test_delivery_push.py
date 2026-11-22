@@ -268,6 +268,36 @@ def test_push_records_each_host_and_status_shows_spec_states(  # noqa: PLR0915 -
     assert "u@nc" in sent
 
 
+def test_status_shows_a_managed_accounts_recorded_login_age_and_mint_time(
+    *, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Status includes the recorded-login row from its temporary record store."""
+    status = importlib.import_module("caam_delivery_push_status")
+    records_module = importlib.import_module("caam_login_records")
+    account = "managed-account"
+    vault_account = tmp_path / ".local/share/caam/vault/claude" / account
+    vault_account.mkdir(parents=True)
+    _write(
+        path=vault_account / ".claude.json",
+        body={"oauthAccount": {"accountUuid": "account-id"}},
+    )
+    monkeypatch.delenv("CAAM_ROTATE_LOGIN_LIFETIME_CAP_HOURS", raising=False)
+    records_path = records_module.records_path(home=tmp_path)
+    records = records_module.load_records(path=records_path).records
+    records_module.record_login(
+        records=records,
+        name=account,
+        minted_at=0.0,
+        source="fixture",
+        now=0.0,
+    )
+    records_module.save_records(path=records_path, records=records)
+
+    lines = status.status_lines(home=tmp_path, now=86_400.0, reissue_available=True)
+
+    assert "LOGIN managed-account: age 1d 0h, minted 1970-01-01T00:00:00Z (recorded)" in lines
+
+
 def test_push_treats_a_host_already_holding_the_sequence_as_reached(*, tmp_path: Path) -> None:
     push = importlib.import_module("caam_delivery_push")
     service = importlib.import_module("caam_delivery_service")

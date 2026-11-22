@@ -11,12 +11,15 @@ and `diverged` when they differ, because hosts receive the LIVE login.
 
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 
 import caam_delivery_push
 import jsonio
-from caam_profile_state import caam_vault, live_creds_path
+from caam_login_records import load_records, records_path
+from caam_login_report import lifetime_settings, login_report_lines
+from caam_profile_state import caam_vault, live_creds_path, profile_names
 from caam_profiles import account_uuid
 from caam_selection_record import selection_record_path
 
@@ -54,7 +57,7 @@ def profile_name(*, home: Path, account: object) -> str:
 
 
 def status_lines(*, home: Path, now: float, reissue_available: bool) -> list[str]:
-    """Host table, then the role holder's live and selected accounts."""
+    """Host table, role-holder state, and each managed account's login report."""
     config = caam_delivery_push.load_config(home=home)
     stale = float(str(config["stale_after_s"]))
     state = caam_delivery_push.load_state(home=home)
@@ -100,6 +103,18 @@ def status_lines(*, home: Path, now: float, reissue_available: bool) -> list[str
         lines.append(
             "remote-control: re-issue unavailable (disabled: remote control support is off);"
             " keep-alive sweep disabled"
+        )
+    loaded = load_records(path=records_path(home=home))
+    if loaded.problem is not None:
+        lines.append(f"FAIL login records unavailable: {loaded.problem}")
+    else:
+        lines.extend(
+            login_report_lines(
+                records=loaded.records,
+                names=profile_names(vault=caam_vault(home=home), active_name=None),
+                now=now,
+                settings=lifetime_settings(environ=os.environ),
+            )
         )
     return lines
 
