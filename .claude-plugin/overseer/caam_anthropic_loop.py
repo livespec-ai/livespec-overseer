@@ -40,10 +40,18 @@ UNSCHEDULED_LINE = (
     "unscheduled: no --scheduled marker, so this pass rotates now;"
     " the projected short-window drain and the expiring-weekly drain do not apply"
 )
+_USAGE = (
+    "usage: caam-anthropic-loop [--scheduled] [--force] [--dry-run] [--no-models] "
+    "[--no-warm] [--session-model SESSION=MODEL] "
+    "[--protected-account ACCOUNT=FLOOR]"
+)
 
 
 class LineWriter(Protocol):
     def __call__(self, line: str) -> None: ...
+
+
+_ARGUMENT_ERROR_PREFIX = "argument error: "
 
 
 class PassRunner(Protocol):
@@ -73,16 +81,16 @@ def parse_flags(*, argv: list[str], environ: Mapping[str, str] | None = None) ->
     index = 0
     while index < len(argv):
         lowered = argv[index].strip().lower()
-        if lowered.startswith("--session-model"):
+        if _is_valued_flag(lowered=lowered, name="--session-model"):
             index = _append_session_model(argv=argv, index=index, session_models=session_models)
-        elif lowered.startswith("--protected-account"):
+        elif _is_valued_flag(lowered=lowered, name="--protected-account"):
             index = _append_protected_account(
                 argv=argv,
                 index=index,
                 protected_accounts=protected_accounts,
             )
-        else:
-            _apply_bool_flag(lowered=lowered, values=values)
+        elif not _apply_bool_flag(lowered=lowered, values=values):
+            raise _argument_error(issue="unrecognised argument", argument=argv[index])
         index += 1
     return Flags(
         session_models=tuple(session_models),
@@ -91,13 +99,20 @@ def parse_flags(*, argv: list[str], environ: Mapping[str, str] | None = None) ->
     )
 
 
+def _is_valued_flag(*, lowered: str, name: str) -> bool:
+    """A valued flag is its exact name, or the name followed by `=`; never a longer name."""
+    return lowered == name or lowered.startswith(f"{name}=")
+
+
 def _append_session_model(
     *, argv: list[str], index: int, session_models: list[tuple[str, str]]
 ) -> int:
     value = argv[index].partition("=")[2]
-    if not value and index + 1 < len(argv):
+    if not value and index + 1 < len(argv) and not argv[index + 1].startswith("-"):
         index += 1
         value = argv[index]
+    if not value:
+        raise _argument_error(issue="missing value for", argument=argv[index])
     session, _separator, model = value.partition("=")
     session_models.append((session.strip(), model.strip().lower()))
     return index
@@ -107,25 +122,37 @@ def _append_protected_account(
     *, argv: list[str], index: int, protected_accounts: list[tuple[str, str]]
 ) -> int:
     value = argv[index].partition("=")[2]
-    if not value and index + 1 < len(argv):
+    if not value and index + 1 < len(argv) and not argv[index + 1].startswith("-"):
         index += 1
         value = argv[index]
+    if not value:
+        raise _argument_error(issue="missing value for", argument=argv[index])
     account, _separator, floor = value.partition("=")
     protected_accounts.append((account.strip(), floor.strip().lower()))
     return index
 
 
-def _apply_bool_flag(*, lowered: str, values: dict[str, bool]) -> None:
-    if lowered.startswith("--scheduled"):
+def _apply_bool_flag(*, lowered: str, values: dict[str, bool]) -> bool:
+    if lowered == "--scheduled":
         values["scheduled"] = True
-    elif lowered.startswith("--force"):
+    elif lowered == "--force":
         values["force"] = True
-    elif lowered.startswith("--dry-run"):
+    elif lowered == "--dry-run":
         values["dry_run"] = True
-    elif lowered.startswith("--no-models"):
+    elif lowered == "--no-models":
         values["no_models"] = True
-    elif lowered.startswith("--no-warm"):
+    elif lowered == "--no-warm":
         values["no_warm"] = True
+    elif lowered == "--warm":
+        # The retired opt-in remains a recognised no-op for compatibility.
+        pass
+    else:
+        return False
+    return True
+
+
+def _argument_error(*, issue: str, argument: str) -> ValueError:
+    return ValueError(f"{_ARGUMENT_ERROR_PREFIX}{issue}: {argument}")
 
 
 def main(
@@ -136,9 +163,20 @@ def main(
 ) -> int:
     writer = _stdout_line if stdout is None else stdout
     runner = _main_pass_runner(writer=writer) if pass_runner is None else pass_runner
+    args = list(sys.argv[1:] if argv is None else argv)
+    if any(argument.strip().lower() == "--help" for argument in args):
+        writer(_USAGE)
+        return 0
     try:
-        flags = parse_flags(argv=list(sys.argv[1:] if argv is None else argv))
+        flags = parse_flags(argv=args)
         return runner(flags=_resolve_mode(flags=flags, writer=writer))
+    except ValueError as exc:
+        if str(exc).startswith(_ARGUMENT_ERROR_PREFIX):
+            writer(_USAGE)
+            writer(f"error: {str(exc).removeprefix(_ARGUMENT_ERROR_PREFIX)}")
+            return 2
+        writer(f"FAIL {type(exc).__name__}: {exc}")
+        return 2
     except _EXPECTED_ERRORS as exc:
         writer(f"FAIL {type(exc).__name__}: {exc}")
         return 2

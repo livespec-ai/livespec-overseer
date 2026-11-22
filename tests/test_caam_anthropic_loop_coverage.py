@@ -87,9 +87,7 @@ def test_main_default_runner_uses_stdout_and_sys_argv_seams(*, monkeypatch) -> N
 
     monkeypatch.setattr(module, "run_pass", fake_run_pass)
     monkeypatch.setattr(module.streams, "write_stdout", lambda *, text: out.append(text))
-    monkeypatch.setattr(
-        module.sys, "argv", ["caam-anthropic-loop", "--unknown", "--scheduled", "--no-warm"]
-    )
+    monkeypatch.setattr(module.sys, "argv", ["caam-anthropic-loop", "--scheduled", "--no-warm"])
 
     assert module.main() == 0
 
