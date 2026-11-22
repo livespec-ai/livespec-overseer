@@ -112,6 +112,9 @@ class ProfileUsage:
     credential_expired: bool = False
     capacity: AccountCapacity | None = None
     reset_reading: ResetReading | None = None
+    # Why this pass's own read of the row failed, where it did. Observation only:
+    # the dark-login judgement reads it, the rest of the operation never does.
+    read_failure: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

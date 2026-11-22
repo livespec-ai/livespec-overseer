@@ -9,6 +9,7 @@ from pathlib import Path
 
 from _caam_rotation_span import RotationOutcome
 from _caam_switch_host import acquire_switch_lock, caam_activate
+from caam_dark_login_lines import dark_login_switch_line
 from caam_decide_context import (
     DecisionContext,
     DecisionSeams,
@@ -25,6 +26,7 @@ from caam_expiring_quota import (
     remember_short_window_departure,
 )
 from caam_fast_drain import ShortWindowProjection, fast_drain_switch_line
+from caam_login_hold import LoginHold
 from caam_profile_state import caam_vault
 from caam_profiles import active_profile
 from caam_refusal_lines import refusal_switch_line
@@ -59,6 +61,7 @@ def decide(
             protection_floors=protection_floors,
             scheduled=seams.scheduled,
             save_state=seams.save_state,
+            dark_login=seams.dark_login,
         )
     )
     # The arm has already written its own hold lines and persisted the state that
@@ -85,6 +88,7 @@ def decide(
             short_window_triggered=choice.short_window_triggered,
             refusal=choice.refusal,
             projection=choice.projection,
+            dark_login=choice.dark_login,
         ),
         seams=seams,
     )
@@ -110,6 +114,9 @@ class _SwitchPlan:
     # table shows is above its floor on such a pass, so the rate and the
     # projected remaining are the only things that reconcile the two.
     projection: ShortWindowProjection | None
+    # The login hold a dark login governed this move on, where one did. It outranks
+    # the refusal, so its line is the one the operator reads.
+    dark_login: LoginHold | None = None
 
 
 def _switch_decision(
@@ -182,6 +189,12 @@ def _result_lines(*, plan: _SwitchPlan, result: SwitchResult, now: float) -> tup
     """
     if not result.switched:
         return result.lines
+    if plan.dark_login is not None:
+        return (
+            dark_login_switch_line(
+                active_name=plan.active_name, target=plan.target, hold=plan.dark_login, now=now
+            ),
+        )
     if plan.projection is not None:
         return (
             fast_drain_switch_line(

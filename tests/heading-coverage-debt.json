@@ -233,20 +233,6 @@
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
-    "heading": "## Scenario: A dark active login is left on the next pass",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A dark active login with no surviving candidate holds and reports",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
     "heading": "## Scenario: A dark login raises one push alert at onset",
     "work_item": "overseer-meryyx",
     "first_seen": "2026-11-10"
@@ -516,13 +502,6 @@
     "heading": "## Scenario: A live recorded session keeps its identity beside a second carrier",
     "work_item": "overseer-a3ymdg",
     "first_seen": "2026-10-26"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A login hold survives a restart",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
   },
   {
     "spec_root": "SPECIFICATION",
@@ -1137,13 +1116,6 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: An exhausted factory credential raises a push alert",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: An expired access token alone does not trigger a dark-login rotation",
     "work_item": "overseer-meryyx",
     "first_seen": "2026-11-10"
   },
@@ -1902,13 +1874,6 @@
     "heading": "## Scenario: Omitted manager bounds use their contract defaults",
     "work_item": "overseer-fzkotk",
     "first_seen": "2026-09-12"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: One refused reading does not judge a login dark",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
   },
   {
     "spec_root": "SPECIFICATION",

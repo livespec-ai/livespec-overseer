@@ -18,6 +18,7 @@ from collections.abc import Mapping
 from caam_anthropic_finish import SaveState, finish
 from caam_candidate_diagnosis import CandidatePopulation, no_candidate_cause
 from caam_capacity_select import capacity_hold_line
+from caam_dark_login_lines import dark_login_hold_line
 from caam_decide_context import DecisionContext, Flags
 from caam_decision import (
     ProfileUsage,
@@ -37,12 +38,15 @@ from caam_decision import (
     weekly_left,
     weekly_reserve,
 )
+from caam_login_hold import LoginHold
 from caam_refusal_lines import refusal_hold_line
 from caam_target_summary import target_summary
 
 __all__: list[str] = [
+    "dark_login_cause",
     "dry_run",
     "hold_allowed",
+    "hold_dark_login",
     "hold_no_candidate",
     "hold_no_capacity",
     "hold_reasons",
@@ -142,6 +146,37 @@ def hold_refusing(
         ),
         reasons=reasons,
     )
+    return _report(context=context, save_state=save_state, lines=(decision_line, line))
+
+
+def dark_login_cause(
+    *, context: DecisionContext, population: CandidatePopulation, capacity_excluded: bool
+) -> str:
+    """Why no candidate survived, for a dark login's hold."""
+    if capacity_excluded:
+        return "every candidate fails the capacity test"
+    return no_candidate_cause(
+        population=population,
+        gain_needed=0.01 if context.flags.force else min_headroom_gain(),
+    )
+
+
+def hold_dark_login(
+    *,
+    context: DecisionContext,
+    save_state: SaveState,
+    decision_line: str,
+    hold: LoginHold,
+    cause: str,
+    reasons: tuple[str, ...] = (),
+) -> int:
+    """Hold where the active login is DARK and no account could replace it.
+
+    The capacity test's release applies only to a refusal-held account and is not
+    extended here, so a candidate set the test empties holds, and the line says
+    the test is why. No reset is claimed: no reset restores a login.
+    """
+    line = dark_login_hold_line(hold=hold, cause=cause, reasons=reasons)
     return _report(context=context, save_state=save_state, lines=(decision_line, line))
 
 

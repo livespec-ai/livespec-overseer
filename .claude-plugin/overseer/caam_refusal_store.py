@@ -46,6 +46,7 @@ __all__: list[str] = [
     "DepartedEntry",
     "RememberedRefusal",
     "activation_at",
+    "activation_of",
     "departed_entries",
     "keep_refusals",
     "record_activation",
@@ -128,6 +129,16 @@ def record_activation(
     state[_ACTIVE_SINCE] = {"account": active_name, "at": now}
     _keep_departed(state=state, active_name=active_name, now=now)
     return Activation(at=now, fresh=True)
+
+
+def activation_of(*, state: dict[str, object], account: str) -> float | None:
+    """When THIS account was observed to become active, or None where it is unknown.
+
+    Read-only, and keyed by account: a record naming another account says nothing
+    about this one, so the answer is None and nothing may be attributed to it.
+    """
+    stored = jsonio.as_object(value=state.get(_ACTIVE_SINCE)) or {}
+    return jsonio.as_float(value=stored.get("at")) if stored.get("account") == account else None
 
 
 def activation_at(*, state: dict[str, object]) -> float | None:

@@ -62,7 +62,11 @@ __all__: list[str] = [
     "RefusalReader",
     "TrackedSession",
     "TrackedSessionSource",
+    "api_error_line",
+    "line_account",
+    "line_recorded_at",
     "session_refusals",
+    "session_transcript_lines",
     "window_label",
 ]
 
@@ -229,3 +233,29 @@ def _reported_reset(*, line: str, recorded_at: float) -> float | None:
     if retry_after is not None:
         return recorded_at + float(retry_after.group(1))
     return None
+
+
+def session_transcript_lines(*, session: TrackedSession) -> tuple[str, ...]:
+    """The tail of the session's transcript, for a reader of another refusal kind.
+
+    Sends no request. A provider this module has no parser for contributes no lines.
+    """
+    if session.provider != PROVIDER_ANTHROPIC:
+        return ()
+    return _transcript_tail(session=session)
+
+
+def api_error_line(*, line: str) -> bool:
+    """Whether the record is structurally an API error, never merely prose about one."""
+    return _ERROR_MARKER_RE.search(line) is not None
+
+
+def line_recorded_at(*, line: str) -> float | None:
+    """The instant the record itself carries, or None where it carries none."""
+    return _recorded_at(line=line)
+
+
+def line_account(*, line: str) -> str | None:
+    """The account identity the record names, or None where it names none."""
+    account = _ACCOUNT_RE.search(line)
+    return None if account is None else account.group(1)
