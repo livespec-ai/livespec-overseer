@@ -43,6 +43,7 @@ check-global-writes  # incident-timing: fast
 check-handoff-dispatch-routing  # incident-timing: fast
 check-heading-coverage  # incident-timing: fast
 check-heading-coverage-debt-register  # incident-timing: fast
+check-hook-template-sandbox-image-path
 check-hook-trees-not-io-exempt  # incident-timing: fast
 check-keyword-only-args  # incident-timing: fast
 check-local-memory-drift-audit  # incident-timing: fast
