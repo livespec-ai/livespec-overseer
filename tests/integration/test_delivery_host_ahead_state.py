@@ -86,12 +86,14 @@ def test_host_ahead_advances_the_counter_and_reissues_to_every_host(*, tmp_path:
     _ = (tmp_path / push.HOSTS_FILE).write_text(
         "first user@first linux\nsecond user@second linux\n", encoding="utf-8"
     )
-    applied = {"user@first": 40, "user@second": 40}
+    applied = {"user@first": 40, "user@second": 0}
     sent: list[tuple[str, int]] = []
 
     def run(*, target: str, program: str, **_: object) -> tuple[int, str]:
         sequence = _sequence_sent(program=program)
         sent.append((target, sequence))
+        if target == "user@second" and sequence == 31:
+            return 0, "not-converted 31"
         if sequence <= applied[target]:
             return 0, f"stale-sequence {sequence} host-applied {applied[target]}"
         applied[target] = sequence

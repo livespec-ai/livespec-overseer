@@ -125,6 +125,7 @@ def push_due(  # noqa: PLR0913 - independent seams
     config: dict[str, object] | None = None,
     reissue: str | None = None,
     start: Starter = start_in_background,
+    force: bool = False,
 ) -> dict[str, str]:
     """Push `delivery` to every listed host still behind it; return label -> outcome.
 
@@ -138,11 +139,15 @@ def push_due(  # noqa: PLR0913 - independent seams
     behind = [
         host
         for host in hosts
-        if due(
-            entry=state.get(host.label, {}), sequence=delivery.sequence, now=now, settings=settings
+        if force
+        or due(
+            entry=state.get(host.label, {}),
+            sequence=delivery.sequence,
+            now=now,
+            settings=settings,
         )
     ]
-    behind = bounded(hosts=behind, state=state, sequence=delivery.sequence)
+    behind = bounded(hosts=behind, state=state, sequence=delivery.sequence) if not force else behind
     factory = factory_record(home=home)
     behind = factory_targets(hosts=hosts, behind=behind, state=state, factory_record=factory)
     oauth = {key: value for key, value in delivery.oauth.items() if key != "refreshToken"}
