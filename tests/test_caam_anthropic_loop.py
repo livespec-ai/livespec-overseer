@@ -351,6 +351,37 @@ def test_unexpected_exception_reports_fail_type_without_traceback():
     assert out == ["FAIL RuntimeError: boom"]
 
 
+@pytest.mark.parametrize("argv", [["--session-model"], ["--protected-account"]])
+def test_missing_flag_value_is_a_usage_error_before_the_rotation_pass(*, argv):
+    module = caam_loop_module()
+    out: list[str] = []
+    runs: list[object] = []
+
+    code = module.main(
+        argv=argv,
+        stdout=out.append,
+        pass_runner=lambda *, flags: runs.append(flags) or 0,
+    )
+
+    assert code == 2
+    assert runs == []
+    assert any("usage" in line.lower() for line in out)
+
+
+def test_unexpected_value_error_reports_fail_type_without_traceback():
+    module = caam_loop_module()
+    out: list[str] = []
+
+    code = module.main(
+        argv=["--scheduled"],
+        stdout=out.append,
+        pass_runner=lambda *, flags: (_ for _ in ()).throw(ValueError("boom")),
+    )
+
+    assert code == 2
+    assert out == ["FAIL ValueError: boom"]
+
+
 def test_empty_vault_fails_loud_and_saves_state(*, tmp_path: Path):
     module = caam_loop_module()
     saved: list[dict[str, object]] = []
