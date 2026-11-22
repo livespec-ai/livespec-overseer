@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.70.1](https://github.com/livespec-ai/livespec-overseer/compare/v5.70.0...v5.70.1) (2026-11-22)
+
+
+### Bug Fixes
+
+* keep login vault and records consistent on failed save ([1748197](https://github.com/livespec-ai/livespec-overseer/commit/174819750d600644bb3e26cd8e1c4db30805c491))
+
 ## [5.70.0](https://github.com/livespec-ai/livespec-overseer/compare/v5.69.1...v5.70.0) (2026-11-22)
 
 
