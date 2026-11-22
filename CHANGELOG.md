@@ -1,5 +1,18 @@
 # Changelog
 
+## [5.72.0](https://github.com/livespec-ai/livespec-overseer/compare/v5.71.0...v5.72.0) (2026-11-22)
+
+
+### Features
+
+* show managed account login status (overseer-tlwdmm) ([f2a0fdf](https://github.com/livespec-ai/livespec-overseer/commit/f2a0fdfee0b6a73b4574d0702ea624ec4df61a73))
+
+
+### Bug Fixes
+
+* isolate herdr replacement and start CLI tests (overseer-f6asav) ([1865a4e](https://github.com/livespec-ai/livespec-overseer/commit/1865a4effaf24be947d95850801f2edfca086482))
+* isolate herdr replacement and start CLI tests without changing launch semantics (overseer-f6asav) ([a7b8994](https://github.com/livespec-ai/livespec-overseer/commit/a7b8994ea2f30658a45ccbcfd5ecaa0f0285686b))
+
 ## [5.71.0](https://github.com/livespec-ai/livespec-overseer/compare/v5.70.1...v5.71.0) (2026-11-22)
 
 
