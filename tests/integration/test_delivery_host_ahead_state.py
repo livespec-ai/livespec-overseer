@@ -54,6 +54,15 @@ def test_host_ahead_is_shown_without_failure_and_retried(*, tmp_path: Path) -> N
     retry = float(settings["retry_s"])
     assert not push._due(entry=entry, sequence=31, now=100.0 + retry - 1, settings=settings)
     assert push._due(entry=entry, sequence=31, now=100.0 + retry, settings=settings)
+    state = importlib.import_module("caam_delivery_push_state")
+    malformed: dict[str, object] = {}
+    state.record_result(
+        entry=malformed,
+        line="stale-sequence not-a-number host-applied 40",
+        delivery=delivery,
+        now=101.0,
+    )
+    assert malformed["state"] == "failed"
 
 
 def test_host_ahead_advances_the_counter_and_reissues_to_every_host(*, tmp_path: Path) -> None:
@@ -113,6 +122,19 @@ def test_host_ahead_advances_the_counter_and_reissues_to_every_host(*, tmp_path:
     ]
     assert json.loads(counter.read_text(encoding="utf-8")) == {"sequence": 41}
     assert applied == {"user@first": 41, "user@second": 41}
+
+    applied.update({"user@first": 42, "user@second": 42})
+    entry.run_once(
+        home=tmp_path,
+        now=551.0,
+        loop=loop,
+        confirm=lambda **_: None,
+        run=run,
+        start=lambda **_: None,
+    )
+
+    assert json.loads(counter.read_text(encoding="utf-8")) == {"sequence": 42}
+    assert loop.last is not None and loop.last.sequence == 41
 
 
 @pytest.mark.parametrize("saved", [None, "", "not-a-number"])

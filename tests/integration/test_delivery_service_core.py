@@ -129,6 +129,7 @@ def test_counter_copied_to_a_new_holder_starts_above_its_previous_delivery(
 
     assert delivery is not None
     assert delivery.sequence == 41
+    assert service.advance_sequence(home=tmp_path, sequence=40) == 41
 
 
 def test_defensive_file_and_identity_failures_leave_no_delivery(*, tmp_path: Path) -> None:

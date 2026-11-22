@@ -120,8 +120,8 @@ def record_result(
         # This is neither a failed push nor a successful one: the host kept its
         # newer delivery, and the role holder must move its own counter forward.
         entry.update(state="ahead", host_applied_sequence=applied)
-        entry.pop("last_error", None)
-        entry.pop("last_error_at", None)
+        _ = entry.pop("last_error", None)
+        _ = entry.pop("last_error_at", None)
         return
     marked = line if word in ("failed", "stale-sequence") else "failed " + line
     entry.update(state="failed", last_error=marked, last_error_at=now)
