@@ -157,11 +157,41 @@ def run_once(  # noqa: PLR0913 - each argument is an independent seam
             _reissue_on_switch(loop=loop, account=issued.account_id, reissue=reissue, local=local)
             loop.last = issued
     if loop.last is not None:
-        outcomes = caam_delivery_push.push_due(
-            home=home, delivery=loop.last, now=now, run=run, reissue=reissue, start=start
+        _push_current(home=home, now=now, loop=loop, run=run, reissue=reissue, start=start)
+        ahead = caam_delivery_push_state.greatest_host_ahead(
+            state=caam_delivery_push.load_state(home=home), sequence=loop.last.sequence
         )
-        for label, outcome in outcomes.items():
-            streams.write_stdout(text=f"push {label} sequence {loop.last.sequence}: {outcome}\n")
+        if ahead is not None:
+            caam_delivery_service.advance_sequence(home=home, sequence=ahead)
+            # The existing live credential is deliberately reissued: the host
+            # proved this holder's old counter is unsafe even though the token
+            # has not changed.
+            issued = caam_delivery_service.issue_delivery(
+                home=home, now=now, confirm_account=confirm, last=None
+            )
+            if issued is not None:
+                loop.last = issued
+                _push_current(home=home, now=now, loop=loop, run=run, reissue=reissue, start=start)
+
+
+def _push_current(
+    *,
+    home: Path,
+    now: float,
+    loop: PushLoop,
+    run: caam_delivery_push.Runner,
+    reissue: str | None,
+    start: caam_delivery_push.Starter,
+) -> None:
+    """Push the remembered delivery and report its outcomes."""
+    delivery = loop.last
+    if delivery is None:
+        return
+    outcomes = caam_delivery_push.push_due(
+        home=home, delivery=delivery, now=now, run=run, reissue=reissue, start=start
+    )
+    for label, outcome in outcomes.items():
+        streams.write_stdout(text=f"push {label} sequence {delivery.sequence}: {outcome}\n")
 
 
 def _reissue_on_switch(

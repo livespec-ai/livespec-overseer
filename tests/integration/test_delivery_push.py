@@ -291,8 +291,9 @@ def test_push_treats_a_host_already_holding_the_sequence_as_reached(*, tmp_path:
     state = push.load_state(home=tmp_path)
     assert state["same"]["sequence"] == 3 and state["same"]["account_id"] == "acct-a"
     assert state["same"]["last_success"] == 50.0
-    assert state["ahead"]["last_error"] == "stale-sequence 3 host-applied 7"
-    assert state["ahead"]["last_error_at"] == 50.0
+    assert state["ahead"]["state"] == "ahead"
+    assert state["ahead"]["host_applied_sequence"] == 7
+    assert "last_error" not in state["ahead"]
     assert "last_success" not in state["ahead"]
 
 

@@ -19,7 +19,7 @@ from pathlib import Path
 import jsonio
 from caam_profile_state import live_creds_path
 
-__all__: list[str] = ["Delivery", "issue_delivery", "write_private_json"]
+__all__: list[str] = ["Delivery", "advance_sequence", "issue_delivery", "write_private_json"]
 
 _STATE = ".local/state/caam-usage-rotate"
 _SEQUENCE_LOCK = "delivery-sequence.lock"
@@ -74,6 +74,18 @@ def issue_delivery(
             path=_path(home=home, name="delivery-sequence.json"), value={"sequence": sequence}
         )
     return delivery
+
+
+def advance_sequence(*, home: Path, sequence: int) -> int:
+    """Persist at least `sequence` after a listed host proves it is ahead."""
+    with _sequence_lock(home=home):
+        current = _sequence(home=home)
+        advanced = max(current, sequence)
+        if advanced != current:
+            write_private_json(
+                path=_path(home=home, name="delivery-sequence.json"), value={"sequence": advanced}
+            )
+    return advanced
 
 
 def _identity(*, state: dict[str, object]) -> dict[str, object] | None:

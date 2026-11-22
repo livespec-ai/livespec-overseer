@@ -28,6 +28,7 @@ __all__: list[str] = [
     "UNSUPPORTED_MACOS",
     "Host",
     "due",
+    "greatest_host_ahead",
     "load_config",
     "load_hosts",
     "load_state",
@@ -43,6 +44,7 @@ PUSH_STATE = f"{STATE_DIR}/delivery-push.json"
 CONFIG_FILE = ".config/caam-delivery/config.json"
 UNSUPPORTED_MACOS = "failed unsupported-platform: macos inbox lands with overseer-7m6wu6"
 _HOST_FIELDS = 3
+_STALE_SEQUENCE_WORDS = 4
 # The re-issue script's 90 s re-scan window plus its last scan of every pane
 # (5.9 s measured on the role holder, 2026-11-13), with room.
 REISSUE_TIMEOUT_S = 120.0
@@ -113,8 +115,30 @@ def record_result(
     if word == "not-converted":
         entry.update(state="not-converted", last_error="not-converted", last_error_at=now)
         return
+    applied = _host_ahead(words=words, sequence=delivery.sequence)
+    if applied is not None:
+        # This is neither a failed push nor a successful one: the host kept its
+        # newer delivery, and the role holder must move its own counter forward.
+        entry.update(state="ahead", host_applied_sequence=applied)
+        entry.pop("last_error", None)
+        entry.pop("last_error_at", None)
+        return
     marked = line if word in ("failed", "stale-sequence") else "failed " + line
     entry.update(state="failed", last_error=marked, last_error_at=now)
+
+
+def greatest_host_ahead(*, state: dict[str, dict[str, object]], sequence: int) -> int | None:
+    """Greatest newer sequence reported by hosts attempted for `sequence`."""
+    reported = [
+        applied
+        for entry in state.values()
+        if entry.get("state") == "ahead"
+        and entry.get("attempt_sequence") == sequence
+        and isinstance(applied := entry.get("host_applied_sequence"), int)
+        and not isinstance(applied, bool)
+        and applied > sequence
+    ]
+    return max(reported, default=None)
 
 
 def due(
@@ -165,6 +189,23 @@ def _reached(*, words: list[str], sequence: int) -> bool:
     return words[:1] == ["applied"] or (
         words[:1] == ["stale-sequence"] and words[2:] == ["host-applied", str(sequence)]
     )
+
+
+def _host_ahead(*, words: list[str], sequence: int) -> int | None:
+    """The reported host sequence when a stale reply proves the host is ahead."""
+    if (
+        len(words) != _STALE_SEQUENCE_WORDS
+        or words[:1] != ["stale-sequence"]
+        or words[2:3] != ["host-applied"]
+    ):
+        return None
+    try:
+        pushed, applied = int(words[1]), int(words[3])
+    except ValueError:
+        return None
+    if pushed != sequence or applied <= sequence or applied < 0:
+        return None
+    return applied
 
 
 def _object(*, path: Path) -> dict[str, object] | None:
