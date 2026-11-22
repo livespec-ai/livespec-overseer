@@ -4959,5 +4959,13 @@
     "test": "TODO",
     "work_item": "overseer-kzmmn7",
     "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v123 (scenarios.md, proposal a-consumer-drove-the-protected); work item overseer-kzmmn7 owns landing it."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: The status command shows each account's login age and mint time",
+    "test": "TODO",
+    "work_item": "overseer-tlwdmm",
+    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v124 (scenarios.md, proposal status-view-shows-login-age); work item overseer-tlwdmm owns landing it."
   }
 ]
