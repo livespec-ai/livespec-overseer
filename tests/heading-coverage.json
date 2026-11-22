@@ -4416,49 +4416,49 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A recorded login shows its age in the report",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-oomnmk.)"
+    "test": "tests.integration.test_caam_login_records.test_a_recorded_login_shows_its_age_and_recorded_mint_time",
+    "work_item": "overseer-oomnmk",
+    "reason": "Runs record-login on a tmp home with a fake credential whose file write time is pinned, then a full rotation pass a day later, and asserts the account's LOGIN line reads age 1d 0h with the (recorded) mint time and no lower-bound marking; the account that never had a record is the control arm and reads first-seen with a lower bound."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A refresh does not start a new login record",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-oomnmk.)"
+    "test": "tests.integration.test_caam_login_records.test_a_refresh_leaves_the_login_record_and_its_mint_time_unchanged",
+    "work_item": "overseer-oomnmk",
+    "reason": "Records a login, rewrites the stored credential the way a token refresh does, runs two passes, and asserts the account's login record is byte-for-byte unchanged with no past login added."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: Recording a new login replaces the old one and releases a login hold",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-oomnmk.)"
+    "test": "tests.integration.test_caam_login_records.test_recording_a_new_login_releases_a_login_hold_and_keeps_the_dark_end",
+    "work_item": "overseer-oomnmk",
+    "reason": "Ends a recorded login as dark (which leaves a login hold), runs record-login for a new login, and asserts the hold is gone, the previous record keeps its dark end cause and evidence, and a new current login exists; the companion test pins the replaced end cause."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A first-seen login age is shown as a lower bound and still warns",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-oomnmk.)"
+    "test": "tests.integration.test_caam_login_records.test_a_first_seen_age_is_a_lower_bound_and_still_warns",
+    "work_item": "overseer-oomnmk",
+    "reason": "With the cap at 28 days and the lead at 48 hours, a first-seen login 27 days old is marked as a lower bound and warned."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: No lifetime-cap warning before the cap is measured",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-oomnmk.)"
+    "test": "tests.integration.test_caam_login_records.test_no_lifetime_cap_warning_before_the_cap_is_measured",
+    "work_item": "overseer-oomnmk",
+    "reason": "With no cap configured and a 400-day-old login, a full pass states the cap is not yet measured and prints no login warning."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A login approaching the measured cap is warned",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-oomnmk.)"
+    "test": "tests.integration.test_caam_login_records.test_a_login_approaching_the_measured_cap_is_warned_and_a_younger_one_is_not",
+    "work_item": "overseer-oomnmk",
+    "reason": "With the cap at 28 days a login 26 days and 1 hour old is warned and one 25 days old (control arm) is not."
   },
   {
     "spec_root": "SPECIFICATION",

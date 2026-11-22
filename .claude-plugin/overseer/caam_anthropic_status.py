@@ -11,6 +11,7 @@ from _caam_pass_span import PassSpan, linked_emitter
 from caam_candidate_diagnosis import unverifiable_candidate_names
 from caam_decision import ProfileUsage, UsageRecord, render_table
 from caam_decision_protection import NO_PROTECTION_FLOORS
+from caam_login_pass import observe_pass_logins
 from caam_rendering import RenderableProfileUsage
 from caam_scoped_selection import scoped_servable_fleet_wide
 from caam_spend_report import spend_alert_lines
@@ -124,6 +125,14 @@ def write_status(  # noqa: PLR0913 — one kw-only argument per rotation-pass in
     note = unverified_note(profiles=profiles, active_name=active_name)
     if note is not None:
         context.stdout(note)
+    # Observation only: login records feed this report and never the decision.
+    observe_pass_logins(
+        home=context.home,
+        names=tuple(profile.name for profile in profiles),
+        now=context.now,
+        dry_run=context.flags.dry_run,
+        stdout=context.stdout,
+    )
 
 
 def unverified_note(*, profiles: tuple[ProfileUsage, ...], active_name: str) -> str | None:

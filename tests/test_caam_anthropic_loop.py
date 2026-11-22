@@ -721,7 +721,7 @@ def test_protected_accounts_persist_as_top_level_state_and_survive_empty_pass(
         save_state=lambda *, state, state_path: saved.append(dict(state)),
         enforce_models=lambda **kwargs: [],
     )
-    state_path.parent.mkdir(parents=True)
+    state_path.parent.mkdir(parents=True, exist_ok=True)
     state_path.write_text(
         (
             '{"foreman_model":"opus","protected_accounts":{"main":12.5,'

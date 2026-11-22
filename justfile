@@ -111,6 +111,14 @@ uninstall-caam-delivery-push:
 caam-strip-refresh-tokens *args:
     uv run caam-strip-refresh-tokens "$@"
 
+# After the operator completes a provider login for a managed account in a
+# configuration directory: store that credential as the account's stored
+# credential and record the login (mint time `recorded`). Never writes the live
+# credential; prints no credential value.
+[positional-arguments]
+record-login *args:
+    uv run record-login "$@"
+
 # The standard shared derive-from-settings wrapper: reads the committed
 # `.claude/settings.json` (`extraKnownMarketplaces` incl. `ref`, `enabledPlugins`)
 # at runtime and issues the marketplace add / install / update commands for
