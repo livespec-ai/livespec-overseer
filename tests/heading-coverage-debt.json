@@ -338,13 +338,6 @@
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
-    "heading": "## Scenario: A first-seen login age is shown as a lower bound and still warns",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
     "heading": "## Scenario: A following host receives an access token and never a refresh token",
     "work_item": "overseer-cpngcd",
     "first_seen": "2026-11-08"
@@ -523,13 +516,6 @@
     "heading": "## Scenario: A live recorded session keeps its identity beside a second carrier",
     "work_item": "overseer-a3ymdg",
     "first_seen": "2026-10-26"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A login approaching the measured cap is warned",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
   },
   {
     "spec_root": "SPECIFICATION",
@@ -716,23 +702,9 @@
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
-    "heading": "## Scenario: A recorded login shows its age in the report",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
     "heading": "## Scenario: A refilled protected account is not preferred over an unprotected one",
     "work_item": "overseer-34f6c6",
     "first_seen": "2026-10-15"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A refresh does not start a new login record",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
   },
   {
     "spec_root": "SPECIFICATION",
@@ -1913,13 +1885,6 @@
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
-    "heading": "## Scenario: No lifetime-cap warning before the cap is measured",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
     "heading": "## Scenario: No qualifying factory account publishes a reason instead of a stale account",
     "work_item": "overseer-shojan",
     "first_seen": "2026-11-16"
@@ -2049,13 +2014,6 @@
     "heading": "## Scenario: Purpose names do not restrict a registered credential kind",
     "work_item": "overseer-fkgrsf",
     "first_seen": "2026-09-12"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: Recording a new login replaces the old one and releases a login hold",
-    "work_item": "overseer-meryyx",
-    "first_seen": "2026-11-10"
   },
   {
     "spec_root": "SPECIFICATION",

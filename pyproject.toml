@@ -37,6 +37,7 @@ overseer-declare = "overseer.declare:main"
 overseer-scan-homelab-charters = "overseer.homelab_charter_scan:main"
 overseerd = "overseer.daemon:main"
 overseer-start = "overseer.start:main"
+record-login = "overseer.caam_record_login:main"
 
 [dependency-groups]
 # Every Python dev tool is uv-managed here (resolved into uv.lock, installed
