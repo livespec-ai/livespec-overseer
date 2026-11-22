@@ -2574,40 +2574,5 @@
     "heading": "## Scenario: A corrupt applied-sequence file reads as zero",
     "work_item": "overseer-ceehcd",
     "first_seen": "2026-11-22"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A legitimate forwarded refusal holds the active account fleet-wide",
-    "work_item": "overseer-tykydt",
-    "first_seen": "2026-11-22"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A forwarded refusal for a non-active account is ignored",
-    "work_item": "overseer-tykydt",
-    "first_seen": "2026-11-22"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A stale forwarded refusal is ignored",
-    "work_item": "overseer-tykydt",
-    "first_seen": "2026-11-22"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: An unauthenticated forwarded refusal is ignored",
-    "work_item": "overseer-tykydt",
-    "first_seen": "2026-11-22"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A misclassified authentication error is not a usage-limit refusal",
-    "work_item": "overseer-tykydt",
-    "first_seen": "2026-11-22"
   }
 ]

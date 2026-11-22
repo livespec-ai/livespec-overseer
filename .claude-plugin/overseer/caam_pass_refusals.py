@@ -54,5 +54,6 @@ def observe_pass_refusals(
             profiles=profiles,
             sessions=source(home=context.home),
             now=context.now,
+            report=context.stdout,
         )
     )

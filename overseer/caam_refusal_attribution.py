@@ -36,9 +36,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Protocol
 
 from caam_decision import ProfileUsage, UsageRecord
+from caam_forwarded_refusals import forwarded_refusals
 from caam_profiles import ActiveIdentity
 from caam_refusal_lapse import attribution_floor
 from caam_refusal_store import (
@@ -59,11 +60,16 @@ from caam_refusals import (
 __all__: list[str] = [
     "LIVE_CONFIG_REL",
     "RefusalObservation",
+    "RefusalReporter",
     "observe_refusals",
 ]
 
 LIVE_CONFIG_REL: Final = ".claude"
 _RESET_TOLERANCE_S: Final = 60.0
+
+
+class RefusalReporter(Protocol):
+    def __call__(self, line: str) -> None: ...
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,6 +88,7 @@ class RefusalObservation:
     sessions: tuple[TrackedSession, ...]
     now: float
     reader: RefusalReader = session_refusals
+    report: RefusalReporter | None = None
 
 
 def observe_refusals(*, observation: RefusalObservation) -> None:
@@ -109,7 +116,14 @@ def observe_refusals(*, observation: RefusalObservation) -> None:
     remember_refusals(
         state=observation.state,
         account=observation.active.profile,
-        refusals=_attributed(observation=observation, activation=activation, departed=departed),
+        refusals=(
+            *_attributed(observation=observation, activation=activation, departed=departed),
+            *_attributed_forwarded(
+                observation=observation,
+                activation=activation,
+                departed=departed,
+            ),
+        ),
         reading=observation.current,
     )
 
@@ -132,6 +146,69 @@ def _attributed(
             departed=departed,
         )
     )
+
+
+def _attributed_forwarded(
+    *,
+    observation: RefusalObservation,
+    activation: Activation,
+    departed: tuple[DepartedEntry, ...],
+) -> tuple[Refusal, ...]:
+    attributed: list[Refusal] = []
+    for outcome in forwarded_refusals(state=observation.state):
+        refusal = outcome.refusal
+        if refusal is None:
+            _report_forwarded(
+                observation=observation, host=outcome.host, reason=outcome.ignored_reason
+            )
+        elif _attributable(
+            refusal=refusal,
+            observation=observation,
+            activation=activation,
+            departed=departed,
+        ):
+            attributed.append(refusal)
+            _report_forwarded_hold(observation=observation, host=outcome.host)
+        else:
+            _report_forwarded(
+                observation=observation,
+                host=outcome.host,
+                reason=_forwarded_ignored_reason(
+                    refusal=refusal,
+                    observation=observation,
+                    activation=activation,
+                ),
+            )
+    return tuple(attributed)
+
+
+def _report_forwarded(*, observation: RefusalObservation, host: str, reason: str | None) -> None:
+    if observation.report is not None:
+        observation.report(f"forwarded refusal from {host} ignored: {reason or 'not attributable'}")
+
+
+def _report_forwarded_hold(*, observation: RefusalObservation, host: str) -> None:
+    if observation.report is not None:
+        observation.report(f"forwarded usage-limit refusal from {host} holds the active account")
+
+
+def _forwarded_ignored_reason(
+    *, refusal: Refusal, observation: RefusalObservation, activation: Activation
+) -> str:
+    if refusal.account != observation.active.account_uuid:
+        return "does not name the active account"
+    floor = attribution_floor(
+        state=observation.state,
+        account=observation.active.profile,
+        window=refusal.window,
+    )
+    if (
+        refusal.recorded_at <= activation.at
+        or (floor is not None and refusal.recorded_at <= floor)
+        or (refusal.resets_at is not None and refusal.resets_at <= observation.now)
+    ):
+        return "stale"
+    return "not attributable"
 
 
 def _on_the_live_credential(*, session: TrackedSession, home: Path) -> bool:
