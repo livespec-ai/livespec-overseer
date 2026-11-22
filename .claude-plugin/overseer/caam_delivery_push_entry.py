@@ -2,7 +2,9 @@
 
 `caam-delivery-push run` follows the live credential and pushes each new
 delivery to every listed host; the delivery lives only in this process's
-memory. `caam-delivery-push status` prints one secret-free line per host.
+memory. Over the same host-key-pinned ssh runner it also collects each listed host's
+latest usage-limit refusal for the anthropic loop (`caam_forwarded_refusal_intake`).
+`caam-delivery-push status` prints one secret-free line per host.
 """
 
 from __future__ import annotations
@@ -22,6 +24,7 @@ import caam_delivery_push_state
 import caam_delivery_push_status
 import caam_delivery_push_sweep
 import caam_delivery_service
+import caam_forwarded_refusal_intake
 import jsonio
 import streams
 from caam_capacity_source import OAUTH_BETA_HEADER, PROFILE_URL
@@ -214,6 +217,7 @@ def main(
         return 0
     loop = PushLoop()
     done = 0
+    forward_due_at = 0.0
     while passes is None or done < passes:
         run_once(
             home=home,
@@ -221,6 +225,9 @@ def main(
             loop=loop,
             reissue=None,
             run=caam_delivery_push.run_ssh,
+        )
+        forward_due_at = caam_forwarded_refusal_intake.forward_if_due(
+            home=home, now=time.time(), due_at=forward_due_at, run=caam_delivery_push.run_ssh
         )
         done += 1
         sleep(POLL_INTERVAL_S)

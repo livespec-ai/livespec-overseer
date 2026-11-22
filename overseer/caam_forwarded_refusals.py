@@ -1,8 +1,9 @@
 """Parse refusal observations the delivery channel forwarded from listed hosts.
 
-The delivery channel's authentication names the host that delivered a record;
-the record itself must name its account and carry only provider refusal text.
-This module admits no host state and makes no request.  Attribution applies the
+The delivery channel's authentication names the host that delivered a record
+(`caam_forwarded_refusal_intake` stamps it from the verified ssh session); the
+record itself must name its account and carry only provider refusal text.  This
+module admits no host state and makes no request.  Attribution applies the
 active-account, activation, settling, and departed-account rules afterwards.
 """
 
@@ -14,10 +15,15 @@ from typing import Final
 import jsonio
 from caam_refusals import WINDOW_FIVE_HOUR, WINDOW_SEVEN_DAY, Refusal
 
-__all__: list[str] = ["ForwardedRefusal", "forwarded_refusals"]
+__all__: list[str] = [
+    "DELIVERY_HOSTS_KEY",
+    "FORWARDED_REFUSALS_KEY",
+    "ForwardedRefusal",
+    "forwarded_refusals",
+]
 
-_FORWARDED_REFUSALS: Final = "forwarded_refusals"
-_DELIVERY_HOSTS: Final = "delivery_hosts"
+FORWARDED_REFUSALS_KEY: Final = "forwarded_refusals"
+DELIVERY_HOSTS_KEY: Final = "delivery_hosts"
 _WEEKLY_LIMIT_PHRASES: Final = (
     "weekly limit reached",
     "hit your weekly limit",
@@ -55,12 +61,12 @@ def forwarded_refusals(*, state: dict[str, object]) -> tuple[ForwardedRefusal, .
     """The listed hosts' self-authenticated usage-limit refusals, failing closed."""
     listed = frozenset(
         value
-        for value in jsonio.as_list(value=state.get(_DELIVERY_HOSTS)) or []
+        for value in jsonio.as_list(value=state.get(DELIVERY_HOSTS_KEY)) or []
         if isinstance(value, str)
     )
     return tuple(
         outcome
-        for value in jsonio.as_list(value=state.get(_FORWARDED_REFUSALS)) or []
+        for value in jsonio.as_list(value=state.get(FORWARDED_REFUSALS_KEY)) or []
         for record in (jsonio.as_object(value=value) or {},)
         for outcome in (_forwarded_refusal(record=record, listed=listed),)
     )
