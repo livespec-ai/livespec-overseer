@@ -6099,6 +6099,54 @@ Then the host's credential and global state file are unchanged
 
 And the apply step reports `stale-sequence`
 
+## Scenario: A host ahead of the delivery counter is shown as ahead, not failed
+
+Given the role holder's delivery-sequence counter is 31
+
+And a listed host has applied delivery sequence 40
+
+When a push carrying delivery sequence 31 reaches that host
+
+Then the apply step reports `stale-sequence 31 host-applied 40` and changes nothing on the host
+
+And the status command shows the host's STATE as `ahead` with host-applied sequence 40
+
+And the push record does not mark the host as a failed push
+
+## Scenario: A host ahead moves the sequence forward, never the host back
+
+Given the role holder's delivery-sequence counter is 31
+
+And a listed host has applied delivery sequence 40
+
+When the delivery service records that host as ahead
+
+Then it writes its delivery-sequence counter as 40 before pushing again
+
+And it issues the current account's delivery with sequence 41 to every listed host
+
+And that host applies sequence 41 and its STATE becomes `current`
+
+## Scenario: A host ahead is never exempted from retry
+
+Given a listed host is recorded as ahead
+
+And the push of the next delivery to that host does not reach it
+
+When `delivery.retry_interval` passes
+
+Then the delivery service pushes that host again
+
+## Scenario: A corrupt applied-sequence file reads as zero
+
+Given a listed host whose applied-sequence file holds non-numeric content
+
+When a push carrying delivery sequence 5 reaches it
+
+Then the apply step applies the delivery
+
+And it prints `applied 5`
+
 ## Scenario: A failed apply leaves the host on its previous delivery
 
 Given a listed host has applied a delivery naming one account

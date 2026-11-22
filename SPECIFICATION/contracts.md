@@ -1252,23 +1252,25 @@ The host list MUST NOT hold credential material. Removing an entry stops deliver
 
 **The apply step.** The push sends the apply step to the host as a program on the ssh session's standard input, followed by the delivery, and the host runs it with its own `python3`. Nothing for delivery is installed on a Linux host. On a `macos` host, where Claude Code keeps the interactive credential in the login Keychain and an ssh session cannot write that Keychain, the push MUST instead write the delivery to an owner-only INBOX file in the listed user's home directory, as a mode-0600 temporary file in the same directory that is then renamed into place. A per-user launch agent installed once on that Mac MUST apply it from there under the same rules, delete the inbox, and write its result line to an owner-only RESULT file beside it, atomically in the same way. The service MUST read that result file on its next push or retry to that host and record it as the host's last result; for a `macos` host, every clause below that depends on the apply step's result uses that recorded result.
 - The apply step MUST hold an exclusive lock from its sequence check until its writes and verification are complete.
-- It MUST compare the delivery's sequence with the APPLIED SEQUENCE recorded on the host in an owner-only file beside the credential file, and MUST change nothing and report `stale-sequence` when the delivery's sequence is not greater.
+- It MUST compare the delivery's sequence with the APPLIED SEQUENCE recorded on the host in an owner-only file beside the credential file, and MUST change nothing and report `stale-sequence` when the delivery's sequence is not greater. An applied-sequence file that is absent, empty, or holds anything other than a non-negative integer MUST be read as applied sequence 0.
 - It MUST change nothing and report `not-converted` when the host's interactive credential holds a refresh token.
 - In the credential, it MUST set `claudeAiOauth` to the delivered object, which MUST NOT contain a `refreshToken` field, and MUST preserve every other top-level key. On Linux the credential is the file `~/.claude/.credentials.json`; on macOS it is the login-Keychain item Claude Code reads.
 - In the global state file `~/.claude.json`, it MUST change only `oauthAccount` and `userID`.
 - Each file write MUST go to a temporary file in the same directory, with mode 0600, which is then renamed into place. It MUST record the applied sequence the same way, last.
 - If either write fails, it MUST restore the captured previous contents of BOTH the credential and the global state file, the credential first, attempting every restore whatever the outcome of an earlier one, and MUST report the delivery as `failed`. A restore that fails MUST be reported as a further, distinct failure naming what was left unrestored.
-- It MUST print exactly one result line, containing no credential material, naming one of `applied`, `stale-sequence`, `not-converted` or `failed`, the sequence it applied or refused, and, for `failed`, the reason.
+- It MUST print exactly one result line, containing no credential material, naming one of `applied`, `stale-sequence`, `not-converted` or `failed`, the sequence it applied or refused, for `stale-sequence` the host's applied sequence in the form `stale-sequence <sequence> host-applied <applied>`, and, for `failed`, the reason.
 
 Accepted and unfixed: the host's own agent sessions write the global state file without the apply step's lock, so they can replace the identity keys after its rename. The verification reports that case.
 
 **Retry and timeouts.** A push attempt that has not finished within `delivery.push_timeout`, default 30 seconds, MUST be abandoned and counted as failed. The service MUST retry a host whose last push failed or did not reach it at least once per `delivery.retry_interval`, default 60 seconds. The service MUST also push the current delivery again to a listed host that already holds it whenever that host's last successful push is older than half of `delivery.stale_after`, so that a reachable host is never shown as `stale` between deliveries; a host's answer that it already holds that delivery MUST count as a successful push and MUST NOT change anything on the host.
 
+A push whose result is `stale-sequence` naming a host-applied sequence GREATER than the sequence pushed is a HOST AHEAD. A host ahead MUST NOT be recorded as a failed push and MUST NOT count as a successful push. On a host ahead, the service MUST write its delivery-sequence counter to the greatest host-applied sequence it has observed, as **Service stores** requires for any counter write, and MUST then issue the current delivery with the next sequence to every listed host. A host ahead MUST remain subject to the retry rule above: until it reports `applied` or holds the current delivery, the service MUST push it again at least once per `delivery.retry_interval`, and MUST NOT exempt it from retry for being ahead. A host's answer that it already holds the delivery, `stale-sequence` naming a host-applied sequence EQUAL to the sequence pushed, remains a successful push as stated above.
+
 **No Remote Control re-issue.** The service MUST NOT type any command into any pane of any host after a push, and MUST NOT sweep panes for Remote Control state.
 
 **Service stores.** The service MUST keep these stores in the operation's host state directory, each created owner-only and written atomically:
 - the DELIVERY-SEQUENCE COUNTER, written before the delivery that consumes the sequence is pushed;
-- the PUSH STATE, holding for each listed host the last result its apply step reported, the sequence and stable account identifier it last applied and when, the time of its last successful push, and its last push error, which contains no credential material, with its time.
+- the PUSH STATE, holding for each listed host the last result its apply step reported (including the host-applied sequence of a host ahead), the sequence and stable account identifier it last applied and when, the time of its last successful push, and its last push error, which contains no credential material, with its time.
 
 
 **Status command.** The status command MUST be readable only on the role holder and MUST contain no credential material. It MUST show whether the live credential has expired without replacement. It MUST show the stable account identifier of the account the live credential holds and of the account the operation's published selection record names, each with its profile name, and MUST mark the pair `diverged` when they differ; the service delivers the live account in that case, as spec.md **The one source** requires. For each listed host, it MUST show:
@@ -1281,10 +1283,13 @@ Accepted and unfixed: the host's own agent sessions write the global state file 
 
 STATE MUST be exactly one of the values below. Where more than one applies, the one listed first MUST be shown:
 - `not-converted`: the host's last result was `not-converted`;
+- `ahead`: the host's last result was `stale-sequence` naming a host-applied sequence greater than the service's current delivery sequence;
 - `expired`: the host's last-applied delivery's access token has reached its expiry;
 - `stale`: the host has had no successful push within `delivery.stale_after`, whose default MUST be 15 minutes;
 - `lagging`: the service has issued a later delivery sequence than the one the host last applied;
 - `current`: none of the above applies.
+
+For a host whose STATE is `ahead`, the status command MUST also show the host-applied sequence it reported. The STATE list MUST remain closed: a value outside it is a defect.
 
 **Configuration.** The host list, `delivery.push_timeout`, `delivery.retry_interval` and `delivery.stale_after` MUST be configurable on the role holder. A listed host carries no delivery configuration beyond authorizing the role key, and, on macOS, the launch agent.
 

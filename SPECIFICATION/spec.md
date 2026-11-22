@@ -1994,7 +1994,7 @@ Converting a host is an explicit operator act that removes the host's own login.
 
 Atomicity, serialization and rollback are defined in contracts.md §"Enrolled-host delivery". Applying a delivery MUST NOT require restarting any session.
 
-**Deliveries never move backwards.** Every delivery MUST carry a DELIVERY SEQUENCE number strictly greater than the number of every delivery the service issued before it. The sequence MUST continue across a move of the role. The apply step MUST apply a delivery only when its delivery sequence is greater than the one the host last applied, so a delayed or retried push cannot move a host back to an earlier account or an earlier token.
+**Deliveries never move backwards.** Every delivery MUST carry a DELIVERY SEQUENCE number strictly greater than the number of every delivery the service issued before it. The sequence MUST continue across a move of the role. The apply step MUST apply a delivery only when its delivery sequence is greater than the one the host last applied, so a delayed or retried push cannot move a host back to an earlier account or an earlier token. When the service learns that a listed host has applied a delivery sequence greater than every sequence the service itself has issued, the service MUST continue the sequence above that host's applied sequence, so that every later delivery is again greater than every sequence any listed host holds.
 
 **No Remote Control after an account switch.** Remote Control support is retired. After a following host applies a delivery, the service MUST NOT type any command, including `/remote-control`, into any agent session or pane on any host, and MUST NOT run a Remote Control re-issue or keep-alive sweep.
 
