@@ -34,9 +34,14 @@ def test_has_active_subshell_exposes_starttime_reader_seam():
 
 def test_has_active_subshell_true_when_direct_child_is_shell():
     # root 100 → node runtime (200) + a background-command shell (300, zsh).
-    children_of, comm_of = _tree(children={100: [200, 300]}, comms={200: "node", 300: "zsh"})
+    # These synthetic PIDs can exist on the host, so supply their fake /proc start
+    # times rather than letting the detector read the unrelated live processes.
     assert (
-        claude_sessions.has_active_subshell(root_pid=100, children_of=children_of, comm_of=comm_of)
+        _has_active_subshell(
+            children={100: [200, 300]},
+            comms={200: "node", 300: "zsh"},
+            starttimes={200: "1000", 300: "2600"},
+        )
         is True
     )
 
@@ -54,11 +59,12 @@ def test_has_active_subshell_false_when_descendants_are_only_non_shells():
 
 def test_has_active_subshell_true_for_deep_shell():
     # A shell nested two levels down: 100 → 200 (node) → 300 (bash).
-    children_of, comm_of = _tree(
-        children={100: [200], 200: [300]}, comms={200: "node", 300: "bash"}
-    )
     assert (
-        claude_sessions.has_active_subshell(root_pid=100, children_of=children_of, comm_of=comm_of)
+        _has_active_subshell(
+            children={100: [200], 200: [300]},
+            comms={200: "node", 300: "bash"},
+            starttimes={200: "1000", 300: "2600"},
+        )
         is True
     )
 
