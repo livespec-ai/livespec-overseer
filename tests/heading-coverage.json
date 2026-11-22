@@ -4999,5 +4999,45 @@
     "test": "TODO",
     "work_item": "overseer-ceehcd",
     "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v125 (scenarios.md, proposal enrolled-host-delivery-host-ahead-state); work item overseer-ceehcd owns landing it."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: A legitimate forwarded refusal holds the active account fleet-wide",
+    "test": "TODO",
+    "work_item": "overseer-tykydt",
+    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: A forwarded refusal for a non-active account is ignored",
+    "test": "TODO",
+    "work_item": "overseer-tykydt",
+    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: A stale forwarded refusal is ignored",
+    "test": "TODO",
+    "work_item": "overseer-tykydt",
+    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: An unauthenticated forwarded refusal is ignored",
+    "test": "TODO",
+    "work_item": "overseer-tykydt",
+    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: A misclassified authentication error is not a usage-limit refusal",
+    "test": "TODO",
+    "work_item": "overseer-tykydt",
+    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
   }
 ]
