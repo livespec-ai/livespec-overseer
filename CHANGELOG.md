@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.70.0](https://github.com/livespec-ai/livespec-overseer/compare/v5.69.1...v5.70.0) (2026-11-22)
+
+
+### Features
+
+* **caam:** login records, record-login and the login-age report with a lifetime-cap warning (overseer-oomnmk) ([b41e550](https://github.com/livespec-ai/livespec-overseer/commit/b41e55057f39780417e174ccc6d0f08416501d9a))
+
 ## [5.69.1](https://github.com/livespec-ai/livespec-overseer/compare/v5.69.0...v5.69.1) (2026-11-21)
 
 
