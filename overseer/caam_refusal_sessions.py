@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Final
 
 import claude_sessions
+from _codex_proc import proc_pids_of_comm
 from _seams import PidToIntList, PidToOptionalBytes
 from caam_picker import real_picker_tmux
 from caam_refusal_attribution import LIVE_CONFIG_REL
@@ -32,13 +33,22 @@ __all__: list[str] = [
 
 _SESSION_ENV_PREFIX: Final = "CLAUDE_CODE_SESSION_ID="
 _CONFIG_ENV_PREFIX: Final = "CLAUDE_CONFIG_DIR="
+_HERDR_COMM: Final = "herdr"
 
 
 def discover_tracked_sessions(*, home: Path) -> tuple[TrackedSession, ...]:
-    """Every tracked Claude session on this host, from one tmux call and `/proc`."""
+    """Every tracked Claude session on this host, from tmux panes, herdr servers and `/proc`.
+
+    A host that runs its sessions under herdr has no tmux panes, so a herdr
+    server's process tree is walked as well: every pane's shell and everything
+    under it descends from the server that owns the pane.
+    """
     return tracked_sessions_from_panes(
         home=home,
-        pane_pids=tuple(real_picker_tmux().pane_pid_sessions()),
+        pane_pids=(
+            *real_picker_tmux().pane_pid_sessions(),
+            *proc_pids_of_comm(comm=_HERDR_COMM),
+        ),
         children_of=claude_sessions.proc_children,
         environ_of=claude_sessions.proc_environ,
     )

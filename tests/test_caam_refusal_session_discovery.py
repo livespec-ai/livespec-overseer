@@ -106,6 +106,7 @@ def test_production_discovery_asks_tmux_for_every_pane_once(
             return {10: "livespec", 20: "overseer"}
 
     monkeypatch.setattr(caam_refusal_sessions, "real_picker_tmux", _Tmux)
+    monkeypatch.setattr(caam_refusal_sessions, "proc_pids_of_comm", lambda *, comm: [])
     monkeypatch.setattr(caam_refusal_sessions.claude_sessions, "proc_children", lambda *, pid: [])
     monkeypatch.setattr(
         caam_refusal_sessions.claude_sessions,
@@ -117,3 +118,34 @@ def test_production_discovery_asks_tmux_for_every_pane_once(
 
     assert calls == ["pane_pid_sessions"]
     assert sorted(session.session_id for session in sessions) == ["session-10", "session-20"]
+
+
+def test_production_discovery_also_walks_the_herdr_servers_a_host_runs(
+    *, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A host running herdr and no tmux has sessions; discovery must see them.
+
+    Found by process ancestry from the herdr servers rather than through the herdr
+    CLI, which would address the operator's default server and hold a socket open.
+    """
+
+    class _NoTmux:
+        def pane_pid_sessions(self) -> dict[int, str]:
+            return {}
+
+    monkeypatch.setattr(caam_refusal_sessions, "real_picker_tmux", _NoTmux)
+    monkeypatch.setattr(
+        caam_refusal_sessions,
+        "proc_pids_of_comm",
+        lambda *, comm: [30, 31] if comm == "herdr" else [],
+    )
+    monkeypatch.setattr(caam_refusal_sessions.claude_sessions, "proc_children", lambda *, pid: [])
+    monkeypatch.setattr(
+        caam_refusal_sessions.claude_sessions,
+        "proc_environ",
+        lambda *, pid: environ(values=(f"CLAUDE_CODE_SESSION_ID=herdr-{pid}",)),
+    )
+
+    sessions = discover_tracked_sessions(home=Path("/home/op"))
+
+    assert sorted(session.session_id for session in sessions) == ["herdr-30", "herdr-31"]
