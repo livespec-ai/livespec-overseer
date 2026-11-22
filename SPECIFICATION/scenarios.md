@@ -7061,6 +7061,18 @@ When the operation produces its report a day later
 
 Then the report MUST show that account's login age as one day and its mint time as recorded
 
+## Scenario: The status command shows each account's login age and mint time
+
+Given the operator has recorded a login for an account and the role holder's report shows its login age
+
+When the operator runs the status command on the role holder
+
+Then it MUST show that account's current login age and mint time
+
+And a first-seen age MUST be marked as a lower bound
+
+And with the lifetime cap unset it MUST state the cap is not yet measured and show no warning
+
 ## Scenario: A refresh does not start a new login record
 
 Given an account's login is recorded with a known mint time
