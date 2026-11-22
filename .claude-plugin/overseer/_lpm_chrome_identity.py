@@ -10,6 +10,8 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Final
 
+from _lpm_platform import close_on_exec_pipe
+
 __all__: list[str] = [
     "is_google_chrome",
 ]
@@ -24,7 +26,7 @@ def is_google_chrome(
     descriptors: list[int] = []
     pid: int | None = None
     try:
-        version_read, version_write = os.pipe2(os.O_CLOEXEC)
+        version_read, version_write = close_on_exec_pipe()
         descriptors.extend((version_read, version_write))
         null_descriptor = os.open(os.devnull, os.O_RDWR | os.O_CLOEXEC)
         descriptors.append(null_descriptor)

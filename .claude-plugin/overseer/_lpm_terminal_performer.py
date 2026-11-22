@@ -15,6 +15,7 @@ from typing import cast
 
 from _lpm_env import scrubbed_environment
 from _lpm_observations import ObservationOutcome, ObservationSanitizer
+from _lpm_platform import close_on_exec_pipe
 
 __all__: list[str] = [
     "ExecutionCommand",
@@ -133,11 +134,11 @@ def _spawn(*, command: ExecutionCommand, environ: Mapping[str, str]) -> _Termina
     descriptors: list[int] = []
     pid: int | None = None
     try:
-        child_stdin, service_stdin = os.pipe2(os.O_CLOEXEC)
+        child_stdin, service_stdin = close_on_exec_pipe()
         descriptors.extend((child_stdin, service_stdin))
-        service_stdout, child_stdout = os.pipe2(os.O_CLOEXEC)
+        service_stdout, child_stdout = close_on_exec_pipe()
         descriptors.extend((service_stdout, child_stdout))
-        service_stderr, child_stderr = os.pipe2(os.O_CLOEXEC)
+        service_stderr, child_stderr = close_on_exec_pipe()
         descriptors.extend((service_stderr, child_stderr))
         actions = (
             (os.POSIX_SPAWN_DUP2, child_stdin, 0),

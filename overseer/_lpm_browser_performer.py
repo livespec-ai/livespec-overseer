@@ -14,6 +14,7 @@ from _lpm_browser_preferences import prepare_browser_preferences
 from _lpm_browser_profile import account_profile, chrome_arguments
 from _lpm_chrome_identity import is_google_chrome
 from _lpm_env import scrubbed_environment
+from _lpm_platform import close_on_exec_pipe
 from _lpm_results import ManagerError, store_unavailable
 
 from overseer._vendor.returns.result import Failure, Result, Success
@@ -195,8 +196,8 @@ def _spawn_chrome(
     )
 
 
-def _private_pipe(*, flags: int = os.O_CLOEXEC) -> tuple[int, int]:
-    first, second = os.pipe2(flags)
+def _private_pipe() -> tuple[int, int]:
+    first, second = close_on_exec_pipe()
     try:
         moved_first = _above_cdp(descriptor=first)
     except OSError:

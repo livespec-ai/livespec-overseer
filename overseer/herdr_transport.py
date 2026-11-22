@@ -45,6 +45,7 @@ from __future__ import annotations
 
 import socket
 import struct
+import sys
 import time
 from collections.abc import Callable, Mapping
 from contextlib import closing
@@ -214,6 +215,8 @@ class HerdrTransport:
 
     def _identify(self, *, sock: Any, deadline: float) -> tuple[PeerIdentity | None, str]:
         """Connect and read the peer's generation, or say why neither happened."""
+        if sys.platform != "linux":  # pragma: no cover - Linux-only transport.
+            return None, "herdr transport requires Linux SO_PEERCRED support"
         remaining = self._remaining(deadline=deadline)
         if remaining <= 0.0:
             return None, _DEADLINE_ERROR

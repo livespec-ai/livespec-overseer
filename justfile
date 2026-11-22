@@ -378,7 +378,7 @@ check-format:
     uv run ruff format --check .
 
 check-types:
-    uv run pyright
+    scripts/just/check-types.sh
 
 # In Red-mode pre-commit this target is omitted by `check-pre-commit`
 # via the `check skip=...` argument (coverage is verified at the Green
