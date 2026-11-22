@@ -92,10 +92,11 @@ def _claude_command(*, topic: str, model: str | None, remote_control: bool) -> s
     )
 
 
-def _launch_search_path() -> str:
+def _launch_search_path(*, prefer_home_local: bool = True) -> str:
     entries = os.environ.get("PATH", "")
     home_local = Path.home() / ".local" / "bin"
-    return os.pathsep.join(part for part in (entries, str(home_local)) if part)
+    ordered = (str(home_local), entries) if prefer_home_local else (entries, str(home_local))
+    return os.pathsep.join(part for part in ordered if part)
 
 
 def _binary_problem(*, binary: str, path: str) -> LaunchProfileProblem:
@@ -107,17 +108,17 @@ def _binary_problem(*, binary: str, path: str) -> LaunchProfileProblem:
 def preflight_launch_command(*, command: str) -> str | LaunchProfileProblem:
     parts = shlex.split(command)
     if not parts:
-        return _binary_problem(binary="", path=_launch_search_path())
+        return _binary_problem(binary="", path=_launch_search_path(prefer_home_local=False))
     binary = parts[0]
     if Path(binary).is_absolute():
         path = Path(binary)
         if path.is_file() and os.access(path, os.X_OK):
             return shlex.join(parts)
-        return _binary_problem(binary=binary, path=_launch_search_path())
+        return _binary_problem(binary=binary, path=_launch_search_path(prefer_home_local=False))
     search_path = _launch_search_path()
     resolved = shutil.which(binary, path=search_path)
     if resolved is None:
-        return _binary_problem(binary=binary, path=search_path)
+        return _binary_problem(binary=binary, path=_launch_search_path(prefer_home_local=False))
     return shlex.join([resolved, *parts[1:]])
 
 
