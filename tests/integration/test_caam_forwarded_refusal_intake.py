@@ -89,8 +89,15 @@ def _run_host_script(
     return capsys.readouterr().out.strip().splitlines()[-1]
 
 
-def _api_error(*, text: str, stamp: str = STAMP) -> str:
-    return json.dumps({"isApiErrorMessage": True, "timestamp": stamp, "message": {"content": text}})
+def _api_error(*, text: str, stamp: str = STAMP, account: str | None = "line-uuid") -> str:
+    body: dict[str, object] = {
+        "isApiErrorMessage": True,
+        "timestamp": stamp,
+        "message": {"content": text},
+    }
+    if account is not None:
+        body["accountUuid"] = account
+    return json.dumps(body)
 
 
 def test_the_listed_hosts_verified_session_stamps_the_forwarded_refusal(*, tmp_path: Path) -> None:
@@ -289,7 +296,7 @@ def test_the_host_program_reports_the_newest_usage_limit_refusal_it_holds(
     assert reply.startswith("forwarded-refusal ")
     body = json.loads(reply.removeprefix("forwarded-refusal "))
     assert body == {
-        "account": "host-uuid",
+        "account": "line-uuid",
         "recorded_at": NOW,
         "provider_message": f"usage limit reached|{int(NOW + 3_600.0)}",
     }
@@ -316,11 +323,45 @@ def test_the_host_program_reports_none_without_a_structural_usage_limit_refusal(
     assert _run_host_script(home=tmp_path, monkeypatch=monkeypatch, capsys=capsys) == "no-refusal"
 
 
-def test_the_host_program_reports_none_when_the_host_names_no_account(
+def test_the_host_program_reports_none_when_no_refusal_line_names_its_account(
     *, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     _host_with_transcript(
-        home=tmp_path, lines=[_api_error(text="usage limit reached")], account=None
+        home=tmp_path, lines=[_api_error(text="usage limit reached", account=None)]
     )
 
     assert _run_host_script(home=tmp_path, monkeypatch=monkeypatch, capsys=capsys) == "no-refusal"
+
+
+def test_the_host_program_attributes_a_refusal_to_the_account_its_own_line_names(
+    *, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A refusal from before an account switch keeps the old account, not the host's current one."""
+    _host_with_transcript(
+        home=tmp_path,
+        lines=[_api_error(text="usage limit reached", account="before-the-switch-uuid")],
+        account="host-uuid-after-the-switch",
+    )
+
+    reply = _run_host_script(home=tmp_path, monkeypatch=monkeypatch, capsys=capsys)
+
+    body = json.loads(reply.removeprefix("forwarded-refusal "))
+    assert body["account"] == "before-the-switch-uuid"
+
+
+def test_the_host_program_skips_a_newer_refusal_that_names_no_account(
+    *, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _host_with_transcript(
+        home=tmp_path,
+        lines=[
+            _api_error(text="usage limit reached", stamp="2027-01-15T07:00:00Z", account="named"),
+            _api_error(text="usage limit reached", account=None),
+        ],
+        account=None,
+    )
+
+    reply = _run_host_script(home=tmp_path, monkeypatch=monkeypatch, capsys=capsys)
+
+    body = json.loads(reply.removeprefix("forwarded-refusal "))
+    assert body["account"] == "named"
