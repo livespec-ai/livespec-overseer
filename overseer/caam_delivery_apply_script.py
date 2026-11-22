@@ -106,9 +106,13 @@ def apply(seq, oauth, identity):
         if (cred.get("claudeAiOauth") or {}).get("refreshToken"):
             out("not-converted %d" % seq, 3)
         try:
-            last = int((raw(qp) or b"0").strip() or 0)
-        except ValueError:
+            sequence = (raw(qp) or b"").strip().decode("ascii")
+        except UnicodeDecodeError:
+            sequence = ""
+        if not sequence or not sequence.isdecimal():
             last = 0
+        else:
+            last = int(sequence)
         if seq <= last:
             out("stale-sequence %d host-applied %d" % (seq, last), 0)
         cred["claudeAiOauth"] = oauth
