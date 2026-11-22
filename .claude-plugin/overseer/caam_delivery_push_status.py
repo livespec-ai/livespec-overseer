@@ -1,6 +1,6 @@
 """`caam-delivery-push status`: one secret-free line per listed host, plus the role holder.
 
-Host STATE is exactly one of not-converted, expired, stale, lagging or current,
+Host STATE is exactly one of not-converted, ahead, expired, stale, lagging or current,
 the first that applies in that order. A host never pushed successfully reads
 stale. Each row names the account its last-applied delivery carried, with the
 profile name the vault gives it, that delivery's sequence and when it was
@@ -31,6 +31,9 @@ def host_state(
     expires = entry.get("expires_at")
     if entry.get("state") == "not-converted":
         return "not-converted"
+    ahead = entry.get("host_applied_sequence")
+    if entry.get("state") == "ahead" and isinstance(ahead, int) and ahead > current_sequence:
+        return "ahead"
     if isinstance(expires, int | float) and expires / 1000 <= now:
         return "expired"
     if not isinstance(success, float) or now - success > stale_after:
@@ -68,12 +71,21 @@ def status_lines(*, home: Path, now: float, reissue_available: bool) -> list[str
     for host in caam_delivery_push.load_hosts(home=home):
         entry = state.get(host.label, {})
         account = entry.get("account_id")
+        host_state_value = host_state(
+            entry=entry, current_sequence=sequence, now=now, stale_after=stale
+        )
+        ahead = (
+            f"  host-applied {entry.get('host_applied_sequence', '-')}"
+            if host_state_value == "ahead"
+            else ""
+        )
         lines.append(
             f"{host.label}  {host.target}  {host.platform}  "
-            f"{host_state(entry=entry, current_sequence=sequence, now=now, stale_after=stale)}  "
+            f"{host_state_value}  "
             f"account {account if isinstance(account, str) else '-'}"
             f" profile {profile_name(home=home, account=account)}  "
             f"sequence {entry.get('sequence', '-')} applied {_when(value=entry.get('applied_at'))}"
+            f"{ahead}"
             f"  last-success {_when(value=entry.get('last_success'))}  "
             f"last-error {_error(entry=entry)}  "
             f"factory-written-at {entry.get('factory_written_at', 'never')}"

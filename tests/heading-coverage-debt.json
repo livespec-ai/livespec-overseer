@@ -2550,34 +2550,6 @@
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
-    "heading": "## Scenario: A host ahead of the delivery counter is shown as ahead, not failed",
-    "work_item": "overseer-ceehcd",
-    "first_seen": "2026-11-22"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A host ahead moves the sequence forward, never the host back",
-    "work_item": "overseer-ceehcd",
-    "first_seen": "2026-11-22"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A host ahead is never exempted from retry",
-    "work_item": "overseer-ceehcd",
-    "first_seen": "2026-11-22"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
-    "heading": "## Scenario: A corrupt applied-sequence file reads as zero",
-    "work_item": "overseer-ceehcd",
-    "first_seen": "2026-11-22"
-  },
-  {
-    "spec_root": "SPECIFICATION",
-    "spec_file": "scenarios.md",
     "heading": "## Scenario: A legitimate forwarded refusal holds the active account fleet-wide",
     "work_item": "overseer-tykydt",
     "first_seen": "2026-11-22"

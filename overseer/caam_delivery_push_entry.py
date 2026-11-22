@@ -157,11 +157,47 @@ def run_once(  # noqa: PLR0913 - each argument is an independent seam
             _reissue_on_switch(loop=loop, account=issued.account_id, reissue=reissue, local=local)
             loop.last = issued
     if loop.last is not None:
-        outcomes = caam_delivery_push.push_due(
-            home=home, delivery=loop.last, now=now, run=run, reissue=reissue, start=start
+        _push_current(home=home, now=now, delivery=loop.last, run=run, reissue=reissue, start=start)
+        ahead = caam_delivery_push_state.greatest_host_ahead(
+            state=caam_delivery_push.load_state(home=home), sequence=loop.last.sequence
         )
-        for label, outcome in outcomes.items():
-            streams.write_stdout(text=f"push {label} sequence {loop.last.sequence}: {outcome}\n")
+        if ahead is not None:
+            _ = caam_delivery_service.advance_sequence(home=home, sequence=ahead)
+            # The existing live credential is deliberately reissued: the host
+            # proved this holder's old counter is unsafe even though the token
+            # has not changed.
+            issued = caam_delivery_service.issue_delivery(
+                home=home, now=now, confirm_account=confirm, last=None
+            )
+            if issued is not None:
+                loop.last = issued
+                _push_current(
+                    home=home,
+                    now=now,
+                    delivery=issued,
+                    run=run,
+                    reissue=reissue,
+                    start=start,
+                    force=True,
+                )
+
+
+def _push_current(  # noqa: PLR0913 - each argument is an independent seam
+    *,
+    home: Path,
+    now: float,
+    delivery: caam_delivery_service.Delivery,
+    run: caam_delivery_push.Runner,
+    reissue: str | None,
+    start: caam_delivery_push.Starter,
+    force: bool = False,
+) -> None:
+    """Push one delivery and report its outcomes."""
+    outcomes = caam_delivery_push.push_due(
+        home=home, delivery=delivery, now=now, run=run, reissue=reissue, start=start, force=force
+    )
+    for label, outcome in outcomes.items():
+        streams.write_stdout(text=f"push {label} sequence {delivery.sequence}: {outcome}\n")
 
 
 def _reissue_on_switch(

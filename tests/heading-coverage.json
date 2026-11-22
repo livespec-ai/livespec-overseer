@@ -4972,33 +4972,25 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A host ahead of the delivery counter is shown as ahead, not failed",
-    "test": "TODO",
-    "work_item": "overseer-ceehcd",
-    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v125 (scenarios.md, proposal enrolled-host-delivery-host-ahead-state); work item overseer-ceehcd owns landing it."
+    "test": "tests/integration/test_delivery_host_ahead_state.py::test_host_ahead_is_shown_without_failure_and_retried"
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A host ahead moves the sequence forward, never the host back",
-    "test": "TODO",
-    "work_item": "overseer-ceehcd",
-    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v125 (scenarios.md, proposal enrolled-host-delivery-host-ahead-state); work item overseer-ceehcd owns landing it."
+    "test": "tests/integration/test_delivery_host_ahead_state.py::test_host_ahead_advances_the_counter_and_reissues_to_every_host"
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A host ahead is never exempted from retry",
-    "test": "TODO",
-    "work_item": "overseer-ceehcd",
-    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v125 (scenarios.md, proposal enrolled-host-delivery-host-ahead-state); work item overseer-ceehcd owns landing it."
+    "test": "tests/integration/test_delivery_host_ahead_state.py::test_host_ahead_is_shown_without_failure_and_retried"
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A corrupt applied-sequence file reads as zero",
-    "test": "TODO",
-    "work_item": "overseer-ceehcd",
-    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v125 (scenarios.md, proposal enrolled-host-delivery-host-ahead-state); work item overseer-ceehcd owns landing it."
+    "test": "tests/integration/test_delivery_host_ahead_state.py::test_apply_treats_missing_empty_or_malformed_sequence_as_zero"
   },
   {
     "spec_root": "SPECIFICATION",
