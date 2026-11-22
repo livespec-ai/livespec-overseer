@@ -2553,5 +2553,26 @@
     "heading": "## Scenario: The committed protected set marks only anthropic-0 and an unintended stored mark is cleared by the operator",
     "work_item": "overseer-xwfyxy",
     "first_seen": "2026-11-21"
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: A selection by a credential consumer of a protected account with no usable headroom above its published protection floor is refused naming the account and floor",
+    "work_item": "overseer-kzmmn7",
+    "first_seen": "2026-11-22"
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: A protected account above its published protection floor is not excluded by the floor and stays subject to the protected ordering",
+    "work_item": "overseer-kzmmn7",
+    "first_seen": "2026-11-22"
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: Every credential consumer reads the one published protection floor and refuses when it cannot",
+    "work_item": "overseer-kzmmn7",
+    "first_seen": "2026-11-22"
   }
 ]

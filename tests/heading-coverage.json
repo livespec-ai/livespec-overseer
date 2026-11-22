@@ -4935,5 +4935,29 @@
     "heading": "## Scenario: An account switch types nothing into any seat",
     "test": "tests.integration.test_caam_delivery_push_sweep.test_the_service_loop_types_nothing_remote_control_support_is_off",
     "reason": "livespec-overseer#3191 added this test: the service loop passes no re-issue script and never starts the sweep, so nothing is typed into any seat."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: A selection by a credential consumer of a protected account with no usable headroom above its published protection floor is refused naming the account and floor",
+    "test": "TODO",
+    "work_item": "overseer-kzmmn7",
+    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v123 (scenarios.md, proposal a-consumer-drove-the-protected); work item overseer-kzmmn7 owns landing it."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: A protected account above its published protection floor is not excluded by the floor and stays subject to the protected ordering",
+    "test": "TODO",
+    "work_item": "overseer-kzmmn7",
+    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v123 (scenarios.md, proposal a-consumer-drove-the-protected); work item overseer-kzmmn7 owns landing it."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: Every credential consumer reads the one published protection floor and refuses when it cannot",
+    "test": "TODO",
+    "work_item": "overseer-kzmmn7",
+    "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v123 (scenarios.md, proposal a-consumer-drove-the-protected); work item overseer-kzmmn7 owns landing it."
   }
 ]

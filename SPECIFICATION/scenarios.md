@@ -7342,3 +7342,35 @@ And `anthropic-4` is protected only by its stored mark
 When the operator runs `--protected-account=anthropic-4=none`
 
 Then `anthropic-4` is unprotected and `anthropic-0` remains protected
+
+
+## Scenario: A selection by a credential consumer of a protected account with no usable headroom above its published protection floor is refused naming the account and floor
+
+```gherkin
+Given the published protection floors name a protected account with a protection floor of 10 percent of its weekly allowance
+And that account's usable headroom net of that floor is zero or below
+When a credential consumer that chooses a managed account on its own authority attempts to select it
+Then the selection MUST be refused
+And the refusal line MUST name the account and a floor of 10 percent of its weekly allowance
+```
+
+## Scenario: A protected account above its published protection floor is not excluded by the floor and stays subject to the protected ordering
+
+```gherkin
+Given the published protection floors name a protected account with a protection floor of 10 percent of its weekly allowance
+And that account's usable headroom net of that floor is above zero
+And an unprotected account is eligible
+When a credential consumer that chooses a managed account on its own authority evaluates both accounts
+Then the floor alone MUST NOT exclude the protected account
+And the protected account MUST NOT be selected while the unprotected account is eligible
+```
+
+## Scenario: Every credential consumer reads the one published protection floor and refuses when it cannot
+
+```gherkin
+Given the operation publishes a protection floor for each protected account
+When a credential consumer that chooses a managed account on its own authority evaluates a protected account
+Then it MUST use the published protection floor and MUST NOT apply another
+When the published protection floors are absent or unreadable
+Then it MUST refuse to select an account whose protection status it cannot establish
+```
