@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.72.4](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.3...v5.72.4) (2026-11-23)
+
+
+### Bug Fixes
+
+* reject help and invalid CAAM entrypoint arguments (overseer-suquqn) ([ad9a785](https://github.com/livespec-ai/livespec-overseer/commit/ad9a785d9b1db5bde945a69c2d24dee15a59bd08))
+
 ## [5.72.3](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.2...v5.72.3) (2026-11-23)
 
 
