@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.72.6](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.5...v5.72.6) (2026-11-23)
+
+
+### Bug Fixes
+
+* snapshot every listed Herdr agent ([bbd736a](https://github.com/livespec-ai/livespec-overseer/commit/bbd736a909e795bf179acf4c6a7ed858a9e7a891))
+
 ## [5.72.5](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.4...v5.72.5) (2026-11-23)
 
 
