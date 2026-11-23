@@ -724,6 +724,7 @@ def test_recreated_tick_retries_only_enter_for_the_exact_pending_resume(*, tmp_p
         ),
     ],
 )
+@pytest.mark.usefixtures("fixture_predecessors_are_gone")
 def test_completed_replacement_fences_failed_cleanup_then_allows_a_fresh_round(
     *,
     tmp_path: Path,
