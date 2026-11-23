@@ -67,6 +67,7 @@ _UNAUTHENTICATED_RE: Final = re.compile(
     r"invalid (bearer|access|oauth)|oauth (access )?token",
     re.IGNORECASE,
 )
+_SUSPECT_MAX_AGE_S: Final = 240 * 60
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -188,10 +189,14 @@ def _condition_b(*, observation: DarkObservation, records: Records) -> str | Non
     pending = suspects(records=records)
     fingerprint = credential_fingerprint(path=live_creds_path(home=observation.home))
     unchanged = fingerprint is not None and fingerprint == observation.live_before
-    if not (unchanged and _refused_unauthenticated(observation=observation)):
-        _ = pending.pop(name, None)
-        return None
     first = cast("dict[str, object] | None", pending.get(name))
+    if first is not None and _suspect_expired(first=first, now=observation.now):
+        _ = pending.pop(name, None)
+        first = None
+    if not (unchanged and _refused_unauthenticated(observation=observation)):
+        if _reading_is_informative(observation=observation):
+            _ = pending.pop(name, None)
+        return None
     if first is None or first.get("fingerprint") != fingerprint:
         pending[name] = {"fingerprint": fingerprint, "first_refused_at": observation.now}
         return None
@@ -200,3 +205,12 @@ def _condition_b(*, observation: DarkObservation, records: Records) -> str | Non
         f"{_stamp(at=cast(float, first['first_refused_at']))} and again at "
         f"{_stamp(at=observation.now)} with the live credential unchanged and unexpired"
     )
+
+
+def _reading_is_informative(*, observation: DarkObservation) -> bool:
+    row = next((p for p in observation.profiles if p.name == observation.active.profile), None)
+    return row is not None and row.read_failure is None
+
+
+def _suspect_expired(*, first: dict[str, object], now: float) -> bool:
+    return now - cast(float, first["first_refused_at"]) > _SUSPECT_MAX_AGE_S
