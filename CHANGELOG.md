@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.72.1](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.0...v5.72.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* **caam:** classify typed revoked-token usage refusals ([2b2ea6e](https://github.com/livespec-ai/livespec-overseer/commit/2b2ea6eb69c350a31545a9436b02ce70b30f742b))
+
 ## [5.72.0](https://github.com/livespec-ai/livespec-overseer/compare/v5.71.0...v5.72.0) (2026-11-22)
 
 
