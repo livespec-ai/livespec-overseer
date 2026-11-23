@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from typing import Protocol, runtime_checkable
 
+import pane_router_agents
 import pane_router_cycle
 import pane_router_reads
 import tmux_process
@@ -13,6 +14,7 @@ from tmuxio_protocols import PaneDriver
 __all__: list[str] = [
     "ReadRouteHost",
     "capture_pane",
+    "herdr_agent_list",
     "pane_agent_session",
     "pane_by_title",
     "pane_claude_cwds",
@@ -129,3 +131,8 @@ def pane_by_title(self: ReadRouteHost, *, pane: str, title: str) -> str | None:
     if decoded.herdr is not None or decoded.tmux is not None or decoded.error:
         return None
     return self.tmux.pane_by_title(pane=pane, title=title)
+
+
+def herdr_agent_list(self: ReadRouteHost) -> list[pane_router_agents.HerdrAgent]:
+    """Every agent the reachable Herdr servers list, each on its exact qualified pane."""
+    return pane_router_agents.herdr_agent_list(observer=self.herdr, endpoints=self.herdr_endpoints)

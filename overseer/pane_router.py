@@ -100,6 +100,7 @@ class MixedPaneDriver:
     pane_pid_sessions = pane_router_read_facade.pane_pid_sessions
     renumbered_herdr_coordinate = pane_router_read_facade.renumbered_herdr_coordinate
     pane_by_title = pane_router_read_facade.pane_by_title
+    herdr_agent_list = pane_router_read_facade.herdr_agent_list
     report_agent_session = pane_router_replacement.report_agent_session
 
     def _writes(self) -> pane_router_writes.PaneRoutingWrites:
