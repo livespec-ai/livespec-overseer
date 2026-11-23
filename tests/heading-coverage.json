@@ -4036,6 +4036,14 @@
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
+    "heading": "## Scenario: The refresh-token strip also sweeps credential-file temporary leftovers",
+    "test": "TODO",
+    "work_item": "overseer-i5zd7r",
+    "reason": "A real test at the integration tier or above is owed for this heading; overseer-i5zd7r owns it."
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
     "heading": "## Scenario: A following host receives an access token and never a refresh token",
     "test": "TODO",
     "work_item": "overseer-cpngcd",

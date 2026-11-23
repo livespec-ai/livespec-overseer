@@ -1310,6 +1310,8 @@ For a host whose STATE is `ahead`, the status command MUST also show the host-ap
 
 Step 3 MUST complete before step 4, so no two machines ever use the role holder's refresh tokens. Step 3 does not breach **Coexistence on the role holder**: by then the old machine is no longer the role holder. No listed host changes during a move. Hosts keep their last-applied delivery until the new holder pushes a later one.
 
+**Step 3 sweep.** Step 3's removal MUST also cover every temporary leftover of an atomic credential write beside the live credential, that is every file matching `~/.claude/.credentials.json.tmp.*`. A leftover holding a refresh token MUST have that token removed, every other key kept and the file mode kept. A leftover holding no refresh token MUST be left unchanged. A dry run MUST report what it would change and change nothing. The read-back MUST list file names only and MUST NOT print any credential value. The sweep MUST exit non-zero while any such file still holds a refresh token.
+
 Accepted and unfixed: a pushed access token stays usable until the next refresh on the role holder revokes it, or until it expires, whichever comes first. Removing a host from the host list does not invalidate a token already pushed to it. The service MUST NOT force a refresh to shorten that window.
 
 ## The LLM credential-provider operation
