@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.72.3](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.2...v5.72.3) (2026-11-23)
+
+
+### Bug Fixes
+
+* caam_refusals classify rate-limit windows by typed error (overseer-ogadwv) ([8c01bba](https://github.com/livespec-ai/livespec-overseer/commit/8c01bba79604199fb415668d9992e76576b95c23))
+
 ## [5.72.2](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.1...v5.72.2) (2026-11-23)
 
 
