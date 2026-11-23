@@ -40,6 +40,7 @@ __all__: list[str] = [
 ]
 
 POLL_INTERVAL_S = 5.0
+_USAGE = "usage: caam-delivery-push [run|status]"
 # Remote Control support is OFF (maintainer direction, 2026-11-20): this service types
 # nothing into any seat, so `main` passes no re-issue script and starts no sweep.
 
@@ -203,9 +204,15 @@ def main(
     passes: int | None = None,
 ) -> int:
     """`run` (default) loops forever under systemd; `status` prints and exits."""
+    args = list(sys.argv[1:] if argv is None else argv)
+    if any(argument.strip().lower() == "--help" for argument in args):
+        streams.write_stdout(text=_USAGE + "\n")
+        return 0
+    if args not in ([], ["run"], ["status"]):
+        streams.write_stdout(text=_USAGE + "\n")
+        return 2
     home = Path.home()
-    args = sys.argv[1:] if argv is None else argv
-    if args[:1] == ["status"]:
+    if args == ["status"]:
         lines = caam_delivery_push_status.status_lines(
             home=home, now=time.time(), reissue_available=False
         )

@@ -36,6 +36,7 @@ _CAAM_REL: Final = Path(".local/share/caam")
 _SNAPSHOT: Final = ".credentials.json"
 _KEY: Final = "refreshToken"
 _ARCHIVE_SUFFIXES: Final = (".tar.gz", ".tgz")
+_USAGE: Final = "usage: caam-strip-refresh-tokens [--dry-run]"
 # Exact program tokens, matched against the basenames of the first three argv
 # entries (interpreter, script or `-m` module), so a journal reader or a shell
 # that merely MENTIONS a unit name in a longer argument does not block.
@@ -232,7 +233,14 @@ def _count(*, lines: list[str], word: str) -> int:
 
 def main(*, argv: list[str] | None = None, proc_root: Path = _PROC) -> int:
     """Strip, or with `--dry-run` only report; exit non-zero unless none can remain."""
-    dry_run = "--dry-run" in (sys.argv[1:] if argv is None else argv)
+    args = list(sys.argv[1:] if argv is None else argv)
+    if any(argument.strip().lower() == "--help" for argument in args):
+        streams.write_stdout(text=_USAGE + "\n")
+        return 0
+    if args not in ([], ["--dry-run"]):
+        streams.write_stdout(text=_USAGE + "\n")
+        return 2
+    dry_run = args == ["--dry-run"]
     home = Path.home()
     refusals = blockers(home=home, proc_root=proc_root)
     if refusals:
