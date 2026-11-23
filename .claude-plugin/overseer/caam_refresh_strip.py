@@ -2,10 +2,11 @@
 
 Once the role's stores are copied to the new holder, the OLD holder must hold no
 managed account's refresh token, so no two machines can ever refresh. This strips
-`refreshToken` from the live credential's `claudeAiOauth` and from every caam
-snapshot under `~/.local/share/caam` -- the vault, its backups and any pre-upgrade
-copy -- keeping every other key, writing each file atomically at mode 0600. It is
-idempotent, and it then scans the same files for any residue.
+`refreshToken` from the live credential, direct `.credentials.json.tmp.*`
+leftovers under `~/.claude/`, and every caam snapshot under
+`~/.local/share/caam` -- the vault, its backups and any pre-upgrade copy -- keeping
+every other key, writing each file atomically at mode 0600. It is idempotent, and
+it then scans the same files for any residue.
 
 It refuses, changing nothing, while anything that could still refresh is running:
 the delivery service, the rotation loop, caam itself, or a live Claude Code
@@ -66,10 +67,16 @@ def _sha12(*, data: bytes) -> str:
 
 
 def credential_files(*, home: Path) -> tuple[Path, ...]:
-    """The live credential, then every caam snapshot, backups included."""
+    """The live and temporary credentials, then every caam snapshot, backups included."""
     caam = home / _CAAM_REL
+    temporary = (home / ".claude").glob(f"{_SNAPSHOT}.tmp.*")
     archives = (path for path in caam.rglob("*") if path.name.endswith(_ARCHIVE_SUFFIXES))
-    return (live_creds_path(home=home), *sorted(caam.rglob(_SNAPSHOT)), *sorted(archives))
+    return (
+        live_creds_path(home=home),
+        *sorted(temporary),
+        *sorted(caam.rglob(_SNAPSHOT)),
+        *sorted(archives),
+    )
 
 
 def _argv(*, proc_dir: Path) -> list[str]:
