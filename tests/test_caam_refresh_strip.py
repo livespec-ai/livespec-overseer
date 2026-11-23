@@ -132,6 +132,24 @@ def test_dry_run_changes_nothing(
     assert REFRESH not in out
 
 
+def test_strips_a_claude_credential_temporary_leftover(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    home = _home(tmp_path=tmp_path, monkeypatch=monkeypatch)
+    temporary = home / ".claude/.credentials.json.tmp.refresh-leftover"
+    _cred(path=temporary, extra={"other": 1})
+    code, out = _run(proc=_proc(tmp_path=tmp_path), capsys=capsys)
+    assert code == 0, out
+    body = json.loads(temporary.read_text(encoding="utf-8"))
+    assert "refreshToken" not in body["claudeAiOauth"]
+    assert body["claudeAiOauth"]["accessToken"] == ACCESS
+    assert body["mcpOAuth"] == {"k": "v"}
+    assert body["other"] == 1
+    assert temporary.stat().st_mode & 0o777 == 0o600
+    assert f"stripped {temporary} " in out
+    assert REFRESH not in out
+
+
 @pytest.mark.parametrize(
     "argv",
     [
