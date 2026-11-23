@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.72.2](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.1...v5.72.2) (2026-11-23)
+
+
+### Bug Fixes
+
+* sweep stale Claude credential temporary files ([7c58c55](https://github.com/livespec-ai/livespec-overseer/commit/7c58c55c8c18a82d6bcf27c3a0f243c9022cc092))
+
 ## [5.72.1](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.0...v5.72.1) (2026-11-23)
 
 
