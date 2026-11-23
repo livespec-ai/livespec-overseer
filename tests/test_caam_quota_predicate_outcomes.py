@@ -36,8 +36,6 @@ boundary would be pinning the constant rather than the outcome. The exhaustion b
 IS pinned, because "nothing left" is zero remaining under either representation.
 """
 
-# EXPEDITED_INCIDENT_RESPONSE flag: overseer-5v2ajq
-
 from __future__ import annotations
 
 from math import inf
