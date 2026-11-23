@@ -112,6 +112,40 @@ def test_a_rate_limit_reset_is_its_retry_after_interval_from_when_it_was_recorde
     )
 
 
+def test_typed_rate_limit_errors_ignore_surrounding_window_phrasing(*, tmp_path: Path) -> None:
+    """The typed provider error, rather than its mutable prose, names the window."""
+    session = transcript(
+        tmp_path=tmp_path,
+        lines=(
+            json.dumps(
+                {
+                    "type": "error",
+                    "timestamp": stamp(at=RECORDED_AT),
+                    "error": {
+                        "type": "rate_limit_error",
+                        "message": "weekly limit reached; retry-after: 120",
+                    },
+                }
+            ),
+            json.dumps(
+                {
+                    "type": "error",
+                    "timestamp": stamp(at=RECORDED_AT),
+                    "error": {
+                        "type": "rate_limit_error",
+                        "message": "usage limit reached; retry-after: 120",
+                    },
+                }
+            ),
+        ),
+    )
+
+    assert tuple(refusal.window for refusal in session_refusals(session=session)) == (
+        WINDOW_FIVE_HOUR,
+        WINDOW_FIVE_HOUR,
+    )
+
+
 def test_a_record_naming_an_account_identity_carries_it(*, tmp_path: Path) -> None:
     session = transcript(
         tmp_path=tmp_path,
