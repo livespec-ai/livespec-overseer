@@ -14,6 +14,7 @@ from typing import cast
 
 from caam_decide_context import DecisionContext
 from caam_decision import ProfileUsage, UsageRecord
+from caam_forwarded_refusal_intake import verified_forwarded_state
 from caam_profiles import ActiveIdentity
 from caam_refusal_attribution import RefusalObservation, observe_refusals
 from caam_refusal_sessions import discover_tracked_sessions
@@ -43,16 +44,20 @@ def observe_pass_refusals(
 
     Sends NO request: the records were written by the sessions that had already
     made theirs. The sessions are resolved HERE rather than by the caller so the
-    pass does not hold a value it has no other use for.
+    pass does not hold a value it has no other use for. Listed hosts' forwarded
+    refusals are loaded from the delivery push's verified store for this
+    observation alone, replacing whatever the loop state carried under those keys.
     """
-    observe_refusals(
-        observation=RefusalObservation(
-            home=context.home,
-            state=context.state,
-            active=active,
-            current=current,
-            profiles=profiles,
-            sessions=source(home=context.home),
-            now=context.now,
+    with verified_forwarded_state(home=context.home, state=context.state):
+        observe_refusals(
+            observation=RefusalObservation(
+                home=context.home,
+                state=context.state,
+                active=active,
+                current=current,
+                profiles=profiles,
+                sessions=source(home=context.home),
+                now=context.now,
+                report=context.stdout,
+            )
         )
-    )
