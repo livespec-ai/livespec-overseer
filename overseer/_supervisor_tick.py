@@ -15,6 +15,7 @@ import _supervisor_pair
 import _supervisor_reexec
 import _supervisor_render
 import pane_router_cycle
+import signals
 from _supervisor_view import RowView, needs_attention
 
 if TYPE_CHECKING:
@@ -82,7 +83,7 @@ def run_tick(*, sup: Supervisor, act: bool = True) -> list[RowView]:
                 supervisor_view=supervisor_view,
                 act=track_act,
             )
-    views.extend(_supervisor_discovery.unindexed_codex_rows(sup=sup))
+    _append_unmapped_herdr_agents(sup=sup, views=views)
     currency = sup.currency_row()
     if currency is not None:
         views.append(currency)
@@ -100,6 +101,42 @@ def _cycle_views(*, sup: Supervisor) -> list[RowView]:
     """Start the tick with a fresh backend snapshot."""
     pane_router_cycle.begin_cycle(driver=sup.tmux)
     return []
+
+
+def _append_unmapped_herdr_agents(*, sup: Supervisor, views: list[RowView]) -> None:
+    """Project every listed Herdr agent that plan discovery did not already cover."""
+    agent_list = getattr(sup.tmux, "herdr_agent_list", lambda: ())
+    topics = {view.topic for view in views}
+    watch = _supervisor_discovery.resolve_watch(sup=sup)
+    for agent in agent_list():
+        name = agent["name"]
+        if name in topics:
+            continue
+        pane = agent["pane"]
+        capture = sup.tmux.capture_pane(session=pane)
+        ctx = signals.parse_ctx_remaining(capture_text=capture)
+        repo = next(
+            (
+                candidate
+                for candidate in watch
+                if signals.path_in_repo(
+                    pane_current_path=sup.tmux.pane_current_path(session=pane), repo=candidate
+                )
+            ),
+            "",
+        )
+        views.append(
+            RowView(
+                topic=name,
+                repo=repo,
+                tmux=pane,
+                ctx=ctx,
+                ctx_source="live" if ctx is not None else "unreadable",
+                status=agent["status"],
+            )
+        )
+        topics.add(name)
+    views.extend(_supervisor_discovery.unindexed_codex_rows(sup=sup))
 
 
 def _finish_acting_tick(
