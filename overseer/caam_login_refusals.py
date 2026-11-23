@@ -53,6 +53,10 @@ _TIME_LIMIT_RE: Final = re.compile(
 _REVOKED_RE: Final = re.compile(
     r"(login|session|oauth token|refresh token) (has been |was )?revoked", re.IGNORECASE
 )
+_REVOKED_AUTHENTICATION_ERROR_RE: Final = re.compile(
+    r"(?=.*(?:API Error\s*401|HTTP\s*401|\"status\"\s*:\s*401))" r"(?=.*authentication_error)",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,7 +71,10 @@ class LoginRefusal:
 def _kind(*, line: str) -> str | None:
     if _TIME_LIMIT_RE.search(line) is not None:
         return KIND_LIFETIME_CAP
-    if _REVOKED_RE.search(line) is not None:
+    if (
+        _REVOKED_RE.search(line) is not None
+        or _REVOKED_AUTHENTICATION_ERROR_RE.search(line) is not None
+    ):
         return KIND_REVOKED
     return None
 

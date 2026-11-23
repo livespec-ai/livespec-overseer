@@ -45,7 +45,8 @@ _MALFORMED: Final = "factory probe list is malformed; no credential was probed"
 # A refusal is evidence of an unusable credential only when it says the request was
 # unauthenticated; every other refusal or failure is inconclusive and never alerts.
 _UNAUTHENTICATED: Final = re.compile(
-    r"HTTP 40[13]|authenticat|unauthori[sz]ed|token (has )?expired|no token in snapshot",
+    r"HTTP 401\b.*\bauthentication_error\b|HTTP 40[13]|authenticat|"
+    r"unauthori[sz]ed|token (has )?expired|no token in snapshot",
     re.IGNORECASE,
 )
 

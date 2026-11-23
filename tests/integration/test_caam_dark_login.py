@@ -300,6 +300,22 @@ def test_scenario_two_consecutive_refused_readings_with_an_unchanged_credential_
     assert ACTIVE not in store["suspects"]  # type: ignore[operator]
 
 
+def test_scenario_two_revoked_token_refusals_with_the_provider_wording_judge_dark(
+    *, tmp_path: Path
+) -> None:
+    """Condition (b) keys the provider's revoked-token refusal as unauthenticated."""
+    harness = two_accounts(tmp_path=tmp_path)
+    harness.refused[ACTIVE] = "OAuth access token has been revoked."
+
+    _ = harness.run()
+    _code, lines = harness.run(at=NOW + 1_800.0)
+
+    assert harness.switches == [OTHER]
+    switched = next(line for line in lines if "dark login" in line and "SWITCHED" in line)
+    assert "condition (b)" in switched
+    assert harness.store()["holds"][ACTIVE]["condition"] == "b"  # type: ignore[index]
+
+
 def test_scenario_a_dark_active_login_with_no_surviving_candidate_holds_and_reports(
     *, tmp_path: Path
 ) -> None:

@@ -168,6 +168,21 @@ def test_a_rate_limited_factory_credential_probe_is_inconclusive_and_not_alerted
     assert scenario.pushed == []
 
 
+def test_a_revoked_factory_credential_is_unusable_when_the_typed_refusal_is_returned(
+    *, tmp_path: Path
+) -> None:
+    scenario = _pass(tmp_path=tmp_path)
+    scenario.reply = (
+        None,
+        "HTTP 401 authentication_error: OAuth access token has been revoked.",
+    )
+
+    assert scenario.run() == 0
+
+    assert f"{KEY}: unusable" in scenario.report()
+    assert len(scenario.pushed) == 1
+
+
 def test_an_unreadable_factory_credential_is_unusable_and_alerted_with_its_identity(
     *, tmp_path: Path
 ) -> None:

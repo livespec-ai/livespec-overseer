@@ -7,6 +7,7 @@ import importlib
 import io
 import json
 import socket
+import urllib.error
 from pathlib import Path
 from types import ModuleType
 from typing import ClassVar
@@ -204,7 +205,53 @@ def test_default_https_transport_success_and_http_error(*, monkeypatch, tmp_path
 
     usage, why = module.fetch_usage(creds_path=creds, now=1000.0)
     assert usage is None
-    assert why == "rate limited"
+    assert why == "HTTP 429: rate limited"
+
+
+def test_http_error_reason_keeps_status_and_error_type_with_provider_message() -> None:
+    module = caam_oauth_get_module()
+
+    def transport(*, request: object, timeout: float) -> object:
+        del request, timeout
+        raise urllib.error.HTTPError(
+            url="https://api.anthropic.com/api/oauth/usage",
+            code=401,
+            msg="Unauthorized",
+            hdrs=None,
+            fp=io.BytesIO(
+                b'{"type":"authentication_error","message":"OAuth access token has been revoked."}'
+            ),
+        )
+
+    body, why = module.get_json(
+        request=module.OAuthRequest(url="https://api.anthropic.com/api/oauth/usage", headers={}),
+        transport=transport,
+    )
+
+    assert body is None
+    assert why == "HTTP 401 authentication_error: OAuth access token has been revoked."
+
+
+def test_http_error_reason_falls_back_to_its_status_for_an_unreadable_body() -> None:
+    module = caam_oauth_get_module()
+
+    def transport(*, request: object, timeout: float) -> object:
+        del request, timeout
+        raise urllib.error.HTTPError(
+            url="https://api.anthropic.com/api/oauth/usage",
+            code=401,
+            msg="Unauthorized",
+            hdrs=None,
+            fp=io.BytesIO(b"not JSON"),
+        )
+
+    body, why = module.get_json(
+        request=module.OAuthRequest(url="https://api.anthropic.com/api/oauth/usage", headers={}),
+        transport=transport,
+    )
+
+    assert body is None
+    assert why == "HTTP 401"
 
 
 def test_default_transport_rejects_non_https_usage_url(*, monkeypatch, tmp_path: Path):

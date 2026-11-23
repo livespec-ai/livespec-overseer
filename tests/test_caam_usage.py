@@ -142,7 +142,7 @@ def test_fetch_usage_returns_parseable_http_error_message(*, tmp_path: Path):
     )
 
     assert usage is None
-    assert why == "rate limited"
+    assert why == "HTTP 429: rate limited"
 
 
 def test_fetch_usage_returns_status_for_unparseable_http_error(*, tmp_path: Path):
