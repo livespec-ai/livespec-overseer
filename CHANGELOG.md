@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.72.5](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.4...v5.72.5) (2026-11-23)
+
+
+### Bug Fixes
+
+* dark-login suspect survives rate-limited readings and expires after four hours (overseer-wche72) ([816e843](https://github.com/livespec-ai/livespec-overseer/commit/816e843aa6abd3d323150aec03d7149f03618f8c))
+
 ## [5.72.4](https://github.com/livespec-ai/livespec-overseer/compare/v5.72.3...v5.72.4) (2026-11-23)
 
 
