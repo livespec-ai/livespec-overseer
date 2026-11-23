@@ -41,6 +41,7 @@ IS pinned, because "nothing left" is zero remaining under either representation.
 from __future__ import annotations
 
 from math import inf
+from pathlib import Path
 
 import pytest
 from caam_candidate_diagnosis import CandidatePopulation, no_candidate_cause
@@ -63,6 +64,12 @@ from caam_scoped_selection import scoped_alone_trigger
 __all__: list[str] = []
 
 _RESETS_AT = "2026-09-06T12:00:00Z"
+
+
+def test_incident_repayment_removes_the_expedited_response_marker():
+    incident_marker = "EXPEDITED_INCIDENT_RESPONSE flag: " + "overseer-5v2ajq"
+
+    assert incident_marker not in Path(__file__).read_text(encoding="utf-8")
 
 
 def stored_reading(*, remaining: float) -> float:
