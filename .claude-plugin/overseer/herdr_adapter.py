@@ -58,6 +58,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 import claude_sessions
+import herdr_agents
 import herdr_calls
 import herdr_identity
 import herdr_protocol
@@ -66,6 +67,7 @@ from _seams import PidToOptionalStr
 
 __all__: list[str] = [
     "REQUEST_ID_PREFIX",
+    "AgentListing",
     "ForegroundObserver",
     "ForegroundReading",
     "HerdrAdapter",
@@ -104,6 +106,15 @@ class PaneListing:
 
     ok: bool
     panes: tuple[herdr_calls.PaneRow, ...]
+    error: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class AgentListing:
+    """Every agent the addressed server lists, or a named refusal and no agents."""
+
+    ok: bool
+    agents: tuple[herdr_agents.AgentRow, ...]
     error: str
 
 
@@ -205,6 +216,21 @@ class HerdrAdapter:
         if panes is None:
             return PaneListing(ok=False, panes=(), error=_unreadable(kind="pane listing"))
         return PaneListing(ok=True, panes=panes, error="")
+
+    def list_agents(self, *, target: herdr_identity.HerdrPaneTarget) -> AgentListing:
+        """Enumerate the agents of the server `target` names — and only that server."""
+        result, error = self._result_of(
+            target=target,
+            method=herdr_agents.METHOD_AGENT_LIST,
+            params={},
+            expect=herdr_agents.EXPECT_AGENT_LIST,
+        )
+        if error:
+            return AgentListing(ok=False, agents=(), error=error)
+        agents = herdr_agents.agent_rows(result=result)
+        if agents is None:
+            return AgentListing(ok=False, agents=(), error=_unreadable(kind="agent listing"))
+        return AgentListing(ok=True, agents=agents, error="")
 
     def capture_pane(
         self, *, target: herdr_identity.HerdrPaneTarget, retain_ansi: bool = True
