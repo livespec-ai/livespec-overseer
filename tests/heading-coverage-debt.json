@@ -2609,5 +2609,12 @@
     "heading": "## Scenario: A misclassified authentication error is not a usage-limit refusal",
     "work_item": "overseer-tykydt",
     "first_seen": "2026-11-22"
+  },
+  {
+    "spec_root": "SPECIFICATION",
+    "spec_file": "scenarios.md",
+    "heading": "## Scenario: The refresh-token strip also sweeps credential-file temporary leftovers",
+    "work_item": "overseer-i5zd7r",
+    "first_seen": "2026-11-23"
   }
 ]

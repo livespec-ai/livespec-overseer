@@ -6045,6 +6045,22 @@ Then the new holder's first push is applied by that host with no change to that 
 
 And that host's configuration names neither role holder's hostname nor its address
 
+## Scenario: The refresh-token strip also sweeps credential-file temporary leftovers
+
+Given a machine that is no longer the role holder, whose `~/.claude` directory holds one `.credentials.json.tmp.*` file carrying a refresh token among other keys and another carrying none
+
+When the operator runs the refresh-token strip with `--dry-run`
+
+Then it reports the file that holds a refresh token by name, changes no file, and exits non-zero
+
+When the operator then runs the strip without `--dry-run`
+
+Then the refresh token is removed from the file that held one, its other keys and its file mode are unchanged, and the file that held none is unchanged
+
+And the read-back lists file names only and prints no credential value
+
+And a following run reports no file holding a refresh token and exits zero
+
 ## Scenario: A following host receives an access token and never a refresh token
 
 Given a listed host whose interactive credential holds no refresh token
