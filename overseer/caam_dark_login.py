@@ -63,7 +63,8 @@ from caam_usage import read_creds
 __all__: list[str] = ["DarkObservation", "credential_fingerprint", "observe_dark_logins"]
 
 _UNAUTHENTICATED_RE: Final = re.compile(
-    r"HTTP 401|authenticat|unauthori[sz]ed|invalid (bearer|access|oauth)|oauth token",
+    r"HTTP 401\b.*\bauthentication_error\b|authenticat|unauthori[sz]ed|"
+    r"invalid (bearer|access|oauth)|oauth (access )?token",
     re.IGNORECASE,
 )
 

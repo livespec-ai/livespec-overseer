@@ -146,6 +146,13 @@ def _http_error_reason(*, error: urllib.error.HTTPError) -> str:
         return f"HTTP {error.code}"
 
     body = jsonio.as_object(value=parsed)
-    detail = jsonio.as_object(value=None if body is None else body.get("error"))
+    # The provider has used both a direct error object and an ``error`` wrapper.
+    # Preserve the machine-readable status and type in the reason either way;
+    # consumers must not have to infer authentication from mutable provider prose.
+    detail = jsonio.as_object(value=None if body is None else body.get("error")) or body
+    error_type = None if detail is None else detail.get("type")
     message = None if detail is None else detail.get("message")
-    return message if isinstance(message, str) else f"HTTP {error.code}"
+    prefix = f"HTTP {error.code}"
+    if isinstance(error_type, str):
+        prefix += f" {error_type}"
+    return f"{prefix}: {message}" if isinstance(message, str) else prefix
