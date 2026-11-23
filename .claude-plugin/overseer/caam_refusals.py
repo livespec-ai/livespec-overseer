@@ -92,9 +92,12 @@ _WEEKLY_LIMIT_RE: Final = re.compile(
     r"weekly limit reached|hit your weekly limit|weekly usage limit",
     re.IGNORECASE,
 )
+_RATE_LIMIT_ERROR_TYPE_RE: Final = re.compile(
+    r'"type"\s*:\s*"rate_limit_error"',
+    re.IGNORECASE,
+)
 _SHORT_WINDOW_LIMIT_RE: Final = re.compile(
-    r"usage limit reached|hit your session limit|hit your usage limit|"
-    r"rate_limit_error|rate limit exceeded",
+    r"usage limit reached|hit your session limit|hit your usage limit|" r"rate limit exceeded",
     re.IGNORECASE,
 )
 _TIMESTAMP_RE: Final = re.compile(r'"timestamp"\s*:\s*"([^"]+)"')
@@ -210,6 +213,10 @@ def _line_refusals(*, line: str) -> tuple[Refusal, ...]:
 
 
 def _refused_window(*, line: str) -> str | None:
+    # The provider's typed error survives message wording changes and names the
+    # short window even when the accompanying prose mentions another one.
+    if _RATE_LIMIT_ERROR_TYPE_RE.search(line) is not None:
+        return WINDOW_FIVE_HOUR
     if _WEEKLY_LIMIT_RE.search(line) is not None:
         return WINDOW_SEVEN_DAY
     if _SHORT_WINDOW_LIMIT_RE.search(line) is not None:
