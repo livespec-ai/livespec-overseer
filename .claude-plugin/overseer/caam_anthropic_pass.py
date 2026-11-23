@@ -17,8 +17,8 @@ from caam_anthropic_flags import Flags, scheduled_pass
 from caam_anthropic_revive import revive_pass_profiles
 from caam_anthropic_status import write_status
 from caam_hold_record import record_pass_hold
+from caam_pass_alerts import observe_pass_alerts
 from caam_pass_dark_login import live_credential_fingerprint, observe_pass_dark_logins
-from caam_pass_factory_probe import observe_pass_factory_probes
 from caam_pass_observe import observe_pass_rows
 from caam_pass_probe import probe_snapshotless_profiles
 from caam_pass_publish import complete_publications, pass_publication, pass_stamp
@@ -215,11 +215,7 @@ def _pass_with_active(
         state=context.state,
         requested_accounts=requested_protected_accounts(flagged=context.flags.protected_accounts),
     )
-    # Observation only: the probe reads and alerts on the factory credentials and is
-    # never an input to the account decision below. It runs on scheduled passes only,
-    # so an explicit manual rotation never reads credentials or sends alerts.
-    if scheduled_pass(flags=context.flags):
-        observe_pass_factory_probes(context=context, fetcher=seams.fetcher, post=seams.push_post)
+    observe_pass_alerts(context=context, seams=seams)
     current = next((profile.usage for profile in profiles if profile.name == active_name), None)
     if current is None:
         return finish_unreadable_active(

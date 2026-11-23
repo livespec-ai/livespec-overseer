@@ -22,7 +22,14 @@ from caam_anthropic_loop import Flags
 from caam_anthropic_pass import run_pass
 from caam_dark_login import DarkObservation, observe_dark_logins
 from caam_decision import UsageRecord
-from caam_login_records import current_login, load_records, records_path
+from caam_login_records import (
+    current_login,
+    load_records,
+    locked,
+    record_login,
+    records_path,
+    save_records,
+)
 from caam_profile_state import STATE_REL
 from caam_profiles import ActiveIdentity
 from caam_switch import REASON_SWITCHED, SwitchRequest, SwitchResult
@@ -74,6 +81,8 @@ class Harness:
     sessions: tuple[StandIn, ...] = ()
     switches: list[str] = field(default_factory=list)
     requests: list[Path] = field(default_factory=list)
+    pushed: list[str] = field(default_factory=list)
+    push_outcome: str = "sent 200"
 
     def __post_init__(self) -> None:
         for name in self.usages:
@@ -119,6 +128,11 @@ class Harness:
             )
         self.sessions = (StandIn(session_id="live", config_dir=self.home / ".claude"),)
 
+    def configure_push(self) -> None:
+        settings = self.home / ".claude/settings.json"
+        settings.parent.mkdir(parents=True, exist_ok=True)
+        settings.write_text(json.dumps({"env": {"CLAUDE_NTFY_TOPIC": "rotation-test"}}), "utf-8")
+
     def store(self) -> dict[str, object]:
         return load_records(path=records_path(home=self.home)).records
 
@@ -143,8 +157,14 @@ class Harness:
             switch_account=self._switch,
             enforce_models=lambda **kwargs: [],
             tracked_sessions=lambda *, home: self.sessions,
+            push_post=self._push,
         )
         return code, tuple(lines)
+
+    def _push(self, *, url: str, message: str) -> str:
+        del url
+        self.pushed.append(message)
+        return self.push_outcome
 
     def _caam(self, *, args: tuple[str, ...]) -> object:
         del args
@@ -216,6 +236,66 @@ def test_scenario_a_dark_active_login_is_left_on_the_next_pass_and_ends_dark_wit
     assert store["holds"][ACTIVE]["condition"] == "a"  # type: ignore[index]
     # Detecting under (a) sent no request of its own: only the ordinary readings.
     assert all(path.name == ".credentials.json" for path in harness.requests)
+
+
+def test_scenario_a_dark_login_pushes_one_onset_alert_without_credential_material(
+    *, tmp_path: Path
+) -> None:
+    harness = two_accounts(tmp_path=tmp_path)
+    harness.configure_push()
+    harness.record_login_refusal(at=NOW - HOUR)
+
+    code, _lines = harness.run()
+
+    assert code == 0
+    assert len(harness.pushed) == 1
+    assert "dark login" in harness.pushed[0]
+    assert ACTIVE in harness.pushed[0]
+    assert FAKE not in harness.pushed[0]
+
+
+def test_a_failed_dark_login_alert_is_reported_without_blocking_its_rotation(
+    *, tmp_path: Path
+) -> None:
+    harness = two_accounts(tmp_path=tmp_path)
+    harness.configure_push()
+    harness.push_outcome = "failed OSError"
+    harness.record_login_refusal(at=NOW - HOUR)
+
+    code, lines = harness.run()
+
+    assert code == 0
+    assert harness.switches == [OTHER]
+    assert any("alert delivery failed" in line for line in lines)
+
+
+def test_a_dark_login_alert_repeats_after_six_hours_and_recovers_when_its_hold_ends(
+    *, tmp_path: Path
+) -> None:
+    harness = two_accounts(tmp_path=tmp_path)
+    harness.configure_push()
+    harness.record_login_refusal(at=NOW - HOUR)
+
+    assert harness.run()[0] == 0
+    assert harness.run(at=NOW + HOUR)[0] == 0
+    assert len(harness.pushed) == 1
+    assert harness.run(at=NOW + 7 * HOUR)[0] == 0
+    assert len(harness.pushed) == 2
+    path = records_path(home=harness.home)
+    with locked(path=path):
+        records = load_records(path=path).records
+        record_login(
+            records=records,
+            name=ACTIVE,
+            minted_at=NOW + 7 * HOUR,
+            source="test recovery",
+            now=NOW + 7 * HOUR,
+        )
+        save_records(path=path, records=records)
+
+    assert harness.run(at=NOW + 8 * HOUR)[0] == 0
+    assert len(harness.pushed) == 3
+    assert "recovery" in harness.pushed[-1]
 
 
 def test_scenario_a_refusal_before_the_activation_or_the_recorded_mint_is_not_this_login(

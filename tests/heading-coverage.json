@@ -4472,32 +4472,32 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A dark login raises one push alert at onset",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-hydiph.)"
+    "test": "tests/integration/test_caam_dark_login.py::test_scenario_a_dark_login_pushes_one_onset_alert_without_credential_material",
+    "work_item": "overseer-faf7w4",
+    "reason": "Integration test drives a dark-login judgement through the shipped pass and asserts one configured-channel onset alert names the account without credential material."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: An exhausted factory credential raises a push alert",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-hydiph.)"
+    "test": "tests/integration/test_factory_credential_probe_alerts.py::test_an_exhausted_window_judges_the_credential_unusable",
+    "work_item": "overseer-faf7w4",
+    "reason": "Integration test drives a zero short-window probe through the shipped pass and asserts an unusable report plus exactly one push alert."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A failed alert delivery is reported and does not block rotation",
-    "test": "TODO",
-    "work_item": "overseer-meryyx",
-    "reason": "A real test at the integration tier or above is owed for this heading; overseer-meryyx owns it. (Successor test owner to closed overseer-hydiph.)"
+    "test": "tests/integration/test_caam_dark_login.py::test_a_failed_dark_login_alert_is_reported_without_blocking_its_rotation",
+    "work_item": "overseer-faf7w4",
+    "reason": "Integration test makes the configured push channel fail while a dark active login has an eligible replacement, and asserts both the rotation and reported delivery failure."
   },
   {
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A persisting condition is not re-alerted before the repeat interval",
     "test": "tests/integration/test_factory_credential_probe_alerts.py::test_a_persisting_unusable_factory_credential_is_not_realerted_before_its_repeat_interval",
-    "work_item": "overseer-wh4sh2",
+    "work_item": "overseer-faf7w4",
     "reason": "Integration test pins six-hour repeat suppression after an unusable factory-credential alert."
   },
   {
@@ -4505,7 +4505,7 @@
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A rate-limited probe is inconclusive and not alerted",
     "test": "tests/integration/test_factory_credential_probe_alerts.py::test_a_rate_limited_factory_credential_probe_is_inconclusive_and_not_alerted",
-    "work_item": "overseer-wh4sh2",
+    "work_item": "overseer-faf7w4",
     "reason": "Integration test pins a rate-limited factory probe as inconclusive without an alert."
   },
   {
@@ -4513,7 +4513,7 @@
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A credential that cannot be read from its location is unusable",
     "test": "tests/integration/test_factory_credential_probe_alerts.py::test_an_unreadable_factory_credential_is_unusable_and_alerted_with_its_identity",
-    "work_item": "overseer-wh4sh2",
+    "work_item": "overseer-faf7w4",
     "reason": "Integration test pins unreadable configured credentials as unusable with tenant and label in the alert."
   },
   {
@@ -4521,7 +4521,7 @@
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A recovered condition sends one recovery alert",
     "test": "tests/integration/test_factory_credential_probe_alerts.py::test_a_recovered_factory_credential_sends_exactly_one_recovery_alert",
-    "work_item": "overseer-wh4sh2",
+    "work_item": "overseer-faf7w4",
     "reason": "Integration test pins exactly one recovery alert after a previously alerted credential becomes usable."
   },
   {
@@ -4529,7 +4529,7 @@
     "spec_file": "scenarios.md",
     "heading": "## Scenario: No push channel configured is reported",
     "test": "tests/integration/test_factory_credential_probe_alerts.py::test_a_report_states_when_no_push_channel_is_configured",
-    "work_item": "overseer-wh4sh2",
+    "work_item": "overseer-faf7w4",
     "reason": "Integration test pins the report's explicit no-push-channel delivery warning."
   },
   {
