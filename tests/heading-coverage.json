@@ -5012,7 +5012,7 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A legitimate forwarded refusal holds the active account fleet-wide",
-    "test": "TODO",
+    "test": "tests.integration.test_caam_forwarded_refusals.test_a_legitimate_forwarded_refusal_holds_the_active_account_fleet_wide",
     "work_item": "overseer-tykydt",
     "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
   },
@@ -5020,7 +5020,7 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A forwarded refusal for a non-active account is ignored",
-    "test": "TODO",
+    "test": "tests.integration.test_caam_forwarded_refusals.test_a_forwarded_refusal_for_a_non_active_account_is_ignored",
     "work_item": "overseer-tykydt",
     "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
   },
@@ -5028,7 +5028,7 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A stale forwarded refusal is ignored",
-    "test": "TODO",
+    "test": "tests.integration.test_caam_forwarded_refusals.test_a_stale_forwarded_refusal_is_ignored",
     "work_item": "overseer-tykydt",
     "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
   },
@@ -5036,7 +5036,7 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: An unauthenticated forwarded refusal is ignored",
-    "test": "TODO",
+    "test": "tests.integration.test_caam_forwarded_refusals.test_an_unauthenticated_forwarded_refusal_is_ignored",
     "work_item": "overseer-tykydt",
     "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
   },
@@ -5044,7 +5044,7 @@
     "spec_root": "SPECIFICATION",
     "spec_file": "scenarios.md",
     "heading": "## Scenario: A misclassified authentication error is not a usage-limit refusal",
-    "test": "TODO",
+    "test": "tests.integration.test_caam_forwarded_refusals.test_a_forwarded_authentication_error_is_not_a_usage_limit_refusal",
     "work_item": "overseer-tykydt",
     "reason": "An integration-tier test or above is owed for this heading, ratified in SPECIFICATION v126 (scenarios.md, proposal forwarded-refusal-holds-the-fleet); work item overseer-tykydt owns landing it."
   }

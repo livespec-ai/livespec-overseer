@@ -106,6 +106,35 @@ def test_a_refusal_naming_the_active_accounts_own_identity_is_attributed() -> No
     assert len(remembered_refusals(state=state)) == 1
 
 
+def test_an_authenticated_listed_hosts_forwarded_usage_limit_holds_the_active_account() -> None:
+    """A listed host's own current refusal is fleet-wide evidence.
+
+    The forwarded record is deliberately a fixture, rather than a host process:
+    attribution must make the hold decision from the record, the listed-host
+    authentication and the active identity without contacting a host or provider.
+    """
+    state: dict[str, object] = {
+        "active_since": {"account": "anthropic-1", "at": ACTIVATION},
+        "forwarded_refusals": [
+            {
+                "host": "build-agent-a",
+                "authenticated_host": "build-agent-a",
+                "account": "uuid-anthropic-1",
+                "recorded_at": NOW - 60.0,
+                "provider_message": f"Claude AI usage limit reached|{int(NOW + 3_600.0)}",
+            }
+        ],
+        "delivery_hosts": ["build-agent-a"],
+    }
+
+    observed(state=state, refusals=())
+
+    held = remembered_refusals(state=state)
+    assert len(held) == 1
+    assert held[0].account == "anthropic-1"
+    assert held[0].refusal.window == WINDOW_FIVE_HOUR
+
+
 def test_a_lagging_weekly_refusal_is_matched_against_the_weekly_reset_departed_at() -> None:
     """The window the refusal names decides which of a departed entry's resets is read.
 
